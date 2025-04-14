@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
-  <title>일상을 여행처럼 일정 수정.</title>
+  <title>일상을 여행처럼 일정 수정</title>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -24,8 +24,52 @@
       border-radius: 6px; cursor: pointer; font-size: 15px; width: 100%; margin-bottom: 10px;
     }
     button:hover { background-color: #135a96; }
-    #qrZone { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; align-items: center; }
-    #qrZone div { text-align: center; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+.modal {
+  position: relative;
+  background: #fff;
+  padding: 30px 30px 30px 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  animation: fadeIn 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+.modal .close-btn {
+  align-self: flex-end;
+  font-size: 24px;
+  font-weight: bold;
+  background: none;
+  border: none;
+  color: #000;
+  line-height: 1;
+  padding: 0;
+  margin-bottom: 10px;
+  cursor: pointer;
+  z-index: 1001;
+}
+    @keyframes fadeIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -71,6 +115,7 @@
       <input id="tel" inputmode="numeric" pattern="[0-9]*" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;" type="text"/>
       <a href="#" id="smsLink" style="background:#007bff;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📩 문자</a>
       <a href="#" id="callLink" style="background:#28a745;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📞 전화</a>
+      <a href="#" onclick="openQRModal()" style="background:#6c757d;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📷 QR</a>
     </div>
   </div>
 
@@ -96,15 +141,20 @@
   <button onclick="updateSchedule()">✔️ 수정 완료</button>
   <button onclick="location.href='list.html'">📋 목록 보기</button>
 
-  <!-- ✅ QR 코드 영역 -->
-  <div id="qrZone">
-    <div>
-      <p>📞 전화 QR</p>
-      <canvas id="telQR"></canvas>
-    </div>
-    <div>
-      <p>💬 문자 QR</p>
-      <canvas id="smsQR"></canvas>
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal">
+      <button class="close-btn" onclick="closeQRModal()">✖</button>
+      <h2>📱 전화 & 문자 QR</h2>
+      <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
+        <div style="text-align:center;">
+          <p>📞 전화</p>
+          <canvas id="qrTelCanvas"></canvas>
+        </div>
+        <div style="text-align:center;">
+          <p>💬 문자</p>
+          <canvas id="qrSmsCanvas"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -134,14 +184,8 @@
 
       const cleaned = (data.tel || '').replace(/[^0-9]/g, '');
       if (cleaned) {
-        const sms = 'sms:' + cleaned;
-        const tel = 'tel:' + cleaned;
-
-        document.getElementById('smsLink').href = sms;
-        document.getElementById('callLink').href = tel;
-
-        QRCode.toCanvas(document.getElementById('smsQR'), sms, { width: 150 }, err => err && console.error(err));
-        QRCode.toCanvas(document.getElementById('telQR'), tel, { width: 150 }, err => err && console.error(err));
+        document.getElementById('smsLink').href = 'sms:' + cleaned;
+        document.getElementById('callLink').href = 'tel:' + cleaned;
       }
 
       days.forEach(day => {
@@ -172,6 +216,27 @@
       if (error) return alert('수정 실패');
       alert('수정 완료!');
       window.location.href = 'cal.html';
+    }
+
+    function openQRModal() {
+      const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
+      if (!tel) return alert('전화번호를 입력해주세요');
+
+      const smsText = `sms:${tel}`;
+      const telText = `tel:${tel}`;
+
+      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsText, { width: 140 });
+      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telText, { width: 140 });
+
+      const modal = document.getElementById('qrModal');
+      modal.style.display = 'flex';
+      setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function closeQRModal() {
+      const modal = document.getElementById('qrModal');
+      modal.classList.remove('show');
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
 
     loadData();
