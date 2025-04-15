@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>월간 실적 리포트 - 일상을 여행처럼</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      max-width: 1000px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      color: #333;
+    }
+    select, button {
+      padding: 8px 12px;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+    button {
+      background: #1d72b8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #135a96;
+    }
+    .summary, .list {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+    .stat-box {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+    }
+    .stat-box div {
+      background: #eef;
+      padding: 15px 20px;
+      border-radius: 8px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #1d72b8;
+    }
+  
+@media (max-width: 600px) {
+  body {
+    padding: 20px 10px;
+  }
+  .header, .controls, .stat-box, .top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: center;
+  }
+  .header img {
+    height: 32px;
+  }
+  .header h1 {
+    font-size: 1.2em;
+  }
+  .controls label, .controls button, .fc-toolbar-chunk {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+  button, select {
+    font-size: 13px !important;
+    padding: 10px !important;
+  }
+  table {
+    font-size: 13px;
+    word-break: break-word;
+  }
+  th, td {
+    padding: 8px 6px !important;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1 id="reportTitle">📈 실적 리포트</h1>
+    <div>
+      <select id="monthSelect"></select>
+      <button onclick="location.href='cal.html'">📅 캘린더로 돌아가기</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h2>✅ 전체 요약</h2>
+    <div class="stat-box" id="totalStats"></div>
+
+    <h2>📊 체험단별 요약</h2>
+    <table id="officeTable">
+      <thead>
+        <tr>
+          <th>체험단</th>
+          <th>완료건수</th>
+          <th>총 금액</th>
+          <th>평균 금액</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="list">
+    <h2>📋 완료 일정 목록</h2>
+    <table id="doneList">
+      <thead>
+        <tr>
+          <th>순번</th>
+          <th>업체명</th>
+          <th>체험단</th>
+          <th>위치</th>
+          <th>지원금액</th>
+          <th>종료일</th>
+          <th>메모</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+    );
+
+    function formatCost(value) {
+      const num = parseInt(value, 10);
+      if (isNaN(num)) return 0;
+      return num;
+    }
+
+    function formatCurrency(value) {
+      return value.toLocaleString() + '원';
+    }
+
+    function getMonthRange(year, month) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0);
+      return [start, end];
+    }
+
+    function updateTitle(year, month) {
+      document.getElementById('reportTitle').textContent = `📈 ${year}년 ${month.toString().padStart(2, '0')}월 실적 리포트`;
+    }
+
+    function renderMonthSelect() {
+      const select = document.getElementById('monthSelect');
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+
+      for (let i = 0; i < 12; i++) {
+        const date = new Date(currentYear, currentMonth - 1 - i);
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const option = document.createElement('option');
+        option.value = `${y}-${m}`;
+        option.text = `${y}년 ${m}월`;
+        select.appendChild(option);
+      }
+
+      select.value = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+      select.addEventListener('change', () => {
+        const [y, m] = select.value.split('-');
+        loadDoneData(parseInt(y), parseInt(m));
+      });
+    }
+
+    async function loadDoneData(year, month) {
+      updateTitle(year, month);
+      const { data, error } = await supabase.from('sche').select('*');
+      if (error) {
+        alert('데이터 불러오기 실패');
+        return;
+      }
+
+      const [start, end] = getMonthRange(year, month);
+      const doneList = data.filter(item => {
+        if (!item.done || !item.date_e) return false;
+        const date = new Date(item.date_e);
+        return date >= start && date <= end;
+      });
+
+      renderStatistics(doneList);
+      renderList(doneList);
+    }
+
+    function renderStatistics(list) {
+      const totalCount = list.length;
+      const totalAmount = list.reduce((sum, item) => sum + formatCost(item.cost), 0);
+      const avgAmount = totalCount > 0 ? Math.round(totalAmount / totalCount) : 0;
+
+      document.getElementById('totalStats').innerHTML = `
+        <div>완료건수: <span class="highlight">${totalCount}건</span></div>
+        <div>총 지원금액: <span class="highlight">${formatCurrency(totalAmount)}</span></div>
+        <div>평균 지원금액: <span class="highlight">${formatCurrency(avgAmount)}</span></div>
+      `;
+
+      const officeStats = {};
+      for (const item of list) {
+        const office = item.office || '기타';
+        if (!officeStats[office]) {
+          officeStats[office] = { count: 0, sum: 0 };
+        }
+        officeStats[office].count++;
+        officeStats[office].sum += formatCost(item.cost);
+      }
+
+      const tbody = document.querySelector('#officeTable tbody');
+      tbody.innerHTML = '';
+      for (const office in officeStats) {
+        const { count, sum } = officeStats[office];
+        const avg = count > 0 ? Math.round(sum / count) : 0;
+        const row = `
+          <tr>
+            <td>${office}</td>
+            <td>${count}</td>
+            <td>${formatCurrency(sum)}</td>
+            <td>${formatCurrency(avg)}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      }
+    }
+
+    function renderList(list) {
+      const tbody = document.querySelector('#doneList tbody');
+      tbody.innerHTML = '';
+      list.forEach((item, i) => {
+        const row = `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${item.title}</td>
+            <td>${item.office || '기타'}</td>
+            <td>${item.loca || '-'}</td>
+            <td>${formatCurrency(formatCost(item.cost))}</td>
+            <td>${item.date_e}</td>
+            <td>${item.memo || ''}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderMonthSelect();
+      const now = new Date();
+      loadDoneData(now.getFullYear(), now.getMonth() + 1);
+    });
+  </script>
+</body>
+</html>
