@@ -76,7 +76,7 @@
         <th>불가능 요일</th>
         <th>체험단</th>
         <th>메모</th>
-        <th>수정</th>
+        
         <th>삭제</th>
       </tr>
     </thead>
@@ -126,7 +126,7 @@
         tr.innerHTML = `
           <td><input type="checkbox" ${item.done === true || item.done === 'true' ? 'checked' : ''} onchange="toggleDone(${item.id}, this.checked)"></td>
           <td><input type="checkbox" ${item.res_c === true || item.res_c === "true" ? "checked" : ""} disabled></td>
-          <td>${item.title}</td>
+          <td><a href='edit.html?id=${item.id}'>${item.title}</a></td>
           <td>${item.cost}</td>
           <td><span class="link-button" onclick="window.open('${mapLink}', '_blank')">${item.loca}</span></td>
         `;
@@ -153,9 +153,7 @@
         tdMemo.innerHTML = "💬";
         tr.appendChild(tdMemo);
 
-        const tdEdit = document.createElement('td');
-        tdEdit.innerHTML = `<button onclick="location.href='edit.html?id=${item.id}'">수정</button>`;
-        tr.appendChild(tdEdit);
+     
 
         const tdDelete = document.createElement('td');
         tdDelete.innerHTML = `<button onclick="deleteSchedule(${item.id})">삭제</button>`;
