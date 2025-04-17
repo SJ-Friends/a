@@ -67,7 +67,7 @@
     <thead>
       <tr>
         <th>완료</th>
-        <th>#</th>
+        <th>예약</th>
         <th>업체명</th>
         <th>비용</th>
         <th>위치</th>
@@ -125,7 +125,7 @@
 
         tr.innerHTML = `
           <td><input type="checkbox" ${item.done === true || item.done === 'true' ? 'checked' : ''} onchange="toggleDone(${item.id}, this.checked)"></td>
-          <td>${index + 1}</td>
+          <td><input type="checkbox" ${item.res_c === true || item.res_c === "true" ? "checked" : ""} disabled></td>
           <td>${item.title}</td>
           <td>${item.cost}</td>
           <td><span class="link-button" onclick="window.open('${mapLink}', '_blank')">${item.loca}</span></td>
