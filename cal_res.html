@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>일정을 여행처럼 예약캘린더 보기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .header img {
+      height: 40px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.6em;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    #calendar {
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      padding: 10px;
+    }
+    button {
+      padding: 8px 14px;
+      background-color: #1d72b8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #135a96;
+    }
+    .fc .fc-button {
+      background-color: #1d72b8;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+    .fc .fc-button:hover {
+      background-color: #135a96;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #333;
+    }
+    .fc-event-title {
+      white-space: pre-wrap !important;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="logo.jpg" alt="로고">
+    <h1>일정을 여행처럼 예약캘린더 보기</h1>
+  </div>
+
+  <div class="controls">
+    <label></label>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="location.href='index.html'">➕ 새 일정 등록</button>
+      <button onclick="location.href='list.html'">📋 목록 보기</button>
+      <button onclick="location.href='cal.html'">📅 일정캘린더</button>
+    </div>
+  </div>
+
+  <div id='calendar'></div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+    );
+
+    function formatCost(value) {
+      const num = parseInt(value, 10);
+      return isNaN(num) ? '0원' : num.toLocaleString() + '원';
+    }
+
+    async function loadEvents() {
+      const { data, error } = await supabase.from('sche').select('*').eq('res_c', true);
+      if (error) {
+        alert('예약 일정 불러오기 실패');
+        return [];
+      }
+
+      return data.map(item => {
+        const content = `${item.title || '업체명 없음'} (${item.loca || '-'})\n${formatCost(item.cost)}  ${item.res_t || '-'}  ${item.res_p || '-'}명`;
+
+        return {
+          id: item.id,
+          title: content,
+          start: item.res_d,
+          backgroundColor: '#fddd85',
+          borderColor: '#fddd85',
+          textColor: '#000',
+          display: 'block'
+        };
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        locale: 'ko',
+        height: 'auto',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: ''
+        },
+        titleFormat: { year: 'numeric', month: 'long' },
+        events: await loadEvents(),
+        eventClick(info) {
+          if (confirm('예약 일정을 수정하시겠습니까?')) {
+            window.location.href = `edit.html?id=${info.event.id}`;
+          }
+        },
+        eventDidMount: function(info) {
+          const content = info.event.title;
+          const el = info.el.querySelector('.fc-event-title');
+          if (el) el.innerHTML = content.replace(/\n/g, '<br>');
+        }
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
