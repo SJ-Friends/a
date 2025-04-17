@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
   <title>일상을 여행처럼 일정 수정</title>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
@@ -13,7 +14,7 @@
     .header h1 { margin: 0; font-size: 1.5em; }
     .form-group { display: flex; flex-direction: column; margin-bottom: 20px; }
     label { font-weight: bold; margin-bottom: 5px; }
-    input[type="text"], input[type="date"], textarea, select {
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"], textarea, select {
       padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
     }
     textarea { resize: vertical; }
@@ -40,32 +41,32 @@
       display: flex;
       opacity: 1;
     }
-.modal {
-  position: relative;
-  background: #fff;
-  padding: 30px 30px 30px 30px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  animation: fadeIn 0.3s ease;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-}
-.modal .close-btn {
-  align-self: flex-end;
-  font-size: 24px;
-  font-weight: bold;
-  background: none;
-  border: none;
-  color: #000;
-  line-height: 1;
-  padding: 0;
-  margin-bottom: 10px;
-  cursor: pointer;
-  z-index: 1001;
-}
+    .modal {
+      position: relative;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      animation: fadeIn 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal .close-btn {
+      align-self: flex-end;
+      font-size: 24px;
+      font-weight: bold;
+      background: none;
+      border: none;
+      color: #000;
+      line-height: 1;
+      padding: 0;
+      margin-bottom: 10px;
+      cursor: pointer;
+      z-index: 1001;
+    }
     @keyframes fadeIn {
       from { transform: translateY(20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -108,14 +109,23 @@
     <label for="cost">지원금액</label>
     <input id="cost" type="text"/>
   </div>
-
   <div class="form-group">
     <label for="tel">신청 연락처</label>
     <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-      <input id="tel" inputmode="numeric" pattern="[0-9]*" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;" type="text"/>
-      <a href="#" id="smsLink" style="background:#007bff;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📩 문자</a>
-      <a href="#" id="callLink" style="background:#28a745;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📞 전화</a>
-      <a href="#" onclick="openQRModal()" style="background:#6c757d;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;">📷 QR</a>
+      <input id="tel" inputmode="numeric" pattern="[0-9]*" style="flex: 1;" type="text"/>
+      <button id="smsLink">📩 문자</button>
+      <button id="callLink">📞 전화</button>
+      <button onclick="openQRModal()">📷 QR</button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>예약 정보</label>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+      <input id="res_d" type="date" placeholder="예약일자" style="flex: 1"/>
+      <input id="res_t" type="time" placeholder="시간" style="flex: 1" value="17:00"/>
+      <input id="res_p" type="number" placeholder="인원" style="flex: 1" value="2"/>
+      <label style="display: flex; align-items: center; gap: 5px;"><input id="res_c" type="checkbox"/> 예약확정</label>
     </div>
   </div>
 
@@ -145,15 +155,9 @@
     <div class="modal">
       <button class="close-btn" onclick="closeQRModal()">✖</button>
       <h2>📱 전화 & 문자 QR</h2>
-      <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
-        <div style="text-align:center;">
-          <p>📞 전화</p>
-          <canvas id="qrTelCanvas"></canvas>
-        </div>
-        <div style="text-align:center;">
-          <p>💬 문자</p>
-          <canvas id="qrSmsCanvas"></canvas>
-        </div>
+      <div style="display: flex; gap: 30px; justify-content: center;">
+        <div><p>📞 전화</p><canvas id="qrTelCanvas"></canvas></div>
+        <div><p>💬 문자</p><canvas id="qrSmsCanvas"></canvas></div>
       </div>
     </div>
   </div>
@@ -177,20 +181,69 @@
       document.getElementById('date_s').value = data.date_s;
       document.getElementById('date_e').value = data.date_e;
       document.getElementById('cost').value = data.cost;
-      document.getElementById('office').value = data.office || '기타';
       document.getElementById('tel').value = data.tel || '';
+      document.getElementById('office').value = data.office || '기타';
       document.getElementById('memo').value = data.memo;
       document.getElementById('done').checked = data.done === true;
 
+      document.getElementById('res_d').value = data.res_d || '';
+      document.getElementById('res_t').value = data.res_t || '17:00';
+      document.getElementById('res_p').value = data.res_p || '2';
+      document.getElementById('res_c').checked = data.res_c === true;
+
       const cleaned = (data.tel || '').replace(/[^0-9]/g, '');
       if (cleaned) {
-        document.getElementById('smsLink').href = 'sms:' + cleaned;
-        document.getElementById('callLink').href = 'tel:' + cleaned;
+        const resDate = new Date(data.res_d || '');
+        const m = resDate.getMonth() + 1;
+        const d = resDate.getDate();
+        const t = (data.res_t || '17:00').split(':');
+        const h = parseInt(t[0], 10);
+        const min = parseInt(t[1], 10);
+        const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
+        const timeStr = min === 0 ? `${hourStr}` : `${hourStr}${min}분`;
+        const smsText = `안녕하세요
+'${data.title}' 블로그체험단 일상을여행처럼 남주현입니다
+${m}월 ${d}일 ${timeStr} ${data.res_p || 2}명
+예약가능할까요?`;
+        const smsLink = `sms:${cleaned}?body=${encodeURIComponent(smsText)}`;
+        document.getElementById('smsLink').onclick = () => window.location.href = smsLink;
+        document.getElementById('callLink').onclick = () => window.location.href = `tel:${cleaned}`;
       }
 
       days.forEach(day => {
         document.getElementById(day).checked = data[day] === 'Y';
       });
+    }
+
+    function openQRModal() {
+      const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
+      if (!tel) return alert('전화번호를 입력해주세요');
+      const title = document.getElementById('title').value;
+      const d = new Date(document.getElementById('res_d').value);
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const time = document.getElementById('res_t').value.split(':');
+      const h = parseInt(time[0]);
+      const min = parseInt(time[1]);
+      const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
+      const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
+      const num = document.getElementById('res_p').value || 2;
+
+      const smsText = `안녕하세요
+'${title}' 블로그체험단 일상을여행처럼 남주현입니다
+${m}월 ${day}일 ${timeStr} ${num}명
+예약가능할까요?`;
+      const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
+      const telURI = `tel:${tel}`;
+
+      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 140 });
+      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 140 });
+
+      document.getElementById('qrModal').classList.add('show');
+    }
+
+    function closeQRModal() {
+      document.getElementById('qrModal').classList.remove('show');
     }
 
     async function updateSchedule() {
@@ -203,6 +256,10 @@
       const office = document.getElementById('office').value;
       const memo = document.getElementById('memo').value.trim();
       const done = document.getElementById('done').checked;
+      const res_d = document.getElementById('res_d').value;
+      const res_t = document.getElementById('res_t').value;
+      const res_p = document.getElementById('res_p').value;
+      const res_c = document.getElementById('res_c').checked;
 
       const dayValues = {};
       days.forEach(day => {
@@ -210,33 +267,13 @@
       });
 
       const { error } = await supabase.from('sche').update({
-        title, loca, date_s, date_e, cost, tel, office, memo, done, ...dayValues
+        title, loca, date_s, date_e, cost, tel, office, memo, done,
+        res_d, res_t, res_p, res_c, ...dayValues
       }).eq('id', id);
 
       if (error) return alert('수정 실패');
       alert('수정 완료!');
       window.location.href = 'cal.html';
-    }
-
-    function openQRModal() {
-      const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
-      if (!tel) return alert('전화번호를 입력해주세요');
-
-      const smsText = `sms:${tel}`;
-      const telText = `tel:${tel}`;
-
-      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsText, { width: 140 });
-      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telText, { width: 140 });
-
-      const modal = document.getElementById('qrModal');
-      modal.style.display = 'flex';
-      setTimeout(() => modal.classList.add('show'), 10);
-    }
-
-    function closeQRModal() {
-      const modal = document.getElementById('qrModal');
-      modal.classList.remove('show');
-      setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
 
     loadData();
