@@ -196,6 +196,8 @@
         const resDate = new Date(data.res_d || '');
         const m = resDate.getMonth() + 1;
         const d = resDate.getDate();
+const weekday = ['일', '월', '화', '수', '목', '금', '토'];
+const dayName = weekday[resDate.getDay()];
         const t = (data.res_t || '17:00').split(':');
         const h = parseInt(t[0], 10);
         const min = parseInt(t[1], 10);
@@ -203,7 +205,7 @@
         const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
         const smsText = `안녕하세요
 '${data.title}' 블로그체험단 일상을여행처럼 남주현입니다
-${m}월 ${d}일 ${timeStr} ${data.res_p || 2}명
+${m}월 ${d}일(${dayName}) ${timeStr} ${data.res_p || 2}명
 예약가능할까요?`;
         const smsLink = `sms:${cleaned}?body=${encodeURIComponent(smsText)}`;
         document.getElementById('smsLink').onclick = () => window.location.href = smsLink;
@@ -222,6 +224,8 @@ ${m}월 ${d}일 ${timeStr} ${data.res_p || 2}명
       const d = new Date(document.getElementById('res_d').value);
       const m = d.getMonth() + 1;
       const day = d.getDate();
+const weekday = ['일', '월', '화', '수', '목', '금', '토'];
+const dayName = weekday[d.getDay()];
       const time = document.getElementById('res_t').value.split(':');
       const h = parseInt(time[0]);
       const min = parseInt(time[1]);
@@ -231,7 +235,7 @@ ${m}월 ${d}일 ${timeStr} ${data.res_p || 2}명
 
       const smsText = `안녕하세요
 '${title}' 블로그체험단 일상을여행처럼 남주현입니다
-${m}월 ${day}일 ${timeStr} ${num}명
+${m}월 ${day}일(${dayName}) ${timeStr} ${num}명
 예약가능할까요?`;
       const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
       const telURI = `tel:${tel}`;
