@@ -281,26 +281,53 @@
         const hasNextWeekend = [nextFri, nextSat, nextSun].some(d => isInRange(d, today, end));
         if (hasThisWeekend && !hasNextWeekend) weekend.push(item);
       }
+function makeList(list) {
+  return list.map(item => {
+    const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
+    const end = new Date(item.date_e);
+    const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+    const dDay = diff === 0 ? 'D-DAY' : `D-${diff}`;
+    const costStr = formatCost(item.cost || '0');
 
-      function makeList(list) {
-        return list.map(item => {
-          const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
-          const availableDays = Object.entries(dayKor).filter(([k]) => item[k] === 'Y').map(([_, v]) => v).join(', ');
-          const end = new Date(item.date_e);
-          const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-          const dDay = diff === 0 ? 'D-DAY' : `D-${diff}`;
-          let detail = `${item.loca}</span> / ${formatCost(item.cost || '0')}`;
-          if (item.memo) detail += ` / ${item.memo}`;
-
-          return `
-            <li>
-              <strong><a href="edit.html?id=${item.id}">${item.title}</a></strong>
-              (<span class="link-button" onclick="window.open('https://map.naver.com/v5/search/${mapQuery}', '_blank')">${detail})
-              <div class="small-note">가능요일: ${availableDays || '없음'}</div>
-              <div class="small-note">마감일: ${item.date_e || '미정'} (${dDay})</div>
-            </li>`;
-        }).join('');
+    // 예약일자: 같은 줄에 빨간색으로 표시
+    let reserveStr = '';
+    if (item.res_d) {
+      const d = new Date(item.res_d);
+      if (!isNaN(d)) {
+        d.setHours(d.getHours() + 9); // UTC 보정 (한국 시간)
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const h = d.getHours().toString().padStart(2, '0');
+        reserveStr = ` <span style="color: red;">예약일자: ${m}월 ${day}일 ${h}시</span>`;
       }
+    }
+
+const titleLine = `
+  <strong><a href="edit.html?id=${item.id}" style="text-decoration: none; color: inherit;">
+    ${item.title}
+  </a></strong> 
+  (<span class="link-button" style="text-decoration: none; color: #0077cc; cursor: pointer;" 
+    onclick="window.open('https://map.naver.com/v5/search/${mapQuery}', '_blank')">
+    ${item.loca} / ${costStr}${reserveStr}
+  </span>)`;
+
+
+    // 불가능 요일
+    const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
+    const unavailableDays = Object.entries(dayKor)
+      .filter(([k]) => item[k] !== 'Y')
+      .map(([_, v]) => v)
+      .join(', ');
+
+    return `
+      <li>
+        ${titleLine}
+        <div class="small-note">불가능요일: ${unavailableDays || '없음'}</div>
+        <div class="small-note">마감일: ${item.date_e || '미정'} (${dDay})</div>
+      </li>`;
+  }).join('');
+}
+
 
       content.innerHTML = `
         <h3>✅ 체험가능대상 (${available.length}건)</h3>
