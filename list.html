@@ -104,7 +104,7 @@
     async function loadSchedules(sortBy = 'date_e') {
       const showDone = document.getElementById('showDone').checked;
 
-      let query = supabase.from('sche').select('*');
+      let query = supabase.from('sche2').select('*');
       query = query.order(sortBy, { ascending: true });
 
       const { data, error } = await query;
@@ -165,13 +165,13 @@
 
     async function deleteSchedule(id) {
       if (!confirm('정말 삭제하시겠습니까?')) return;
-      const { error } = await supabase.from('sche').delete().eq('id', id);
+      const { error } = await supabase.from('sche2').delete().eq('id', id);
       if (error) return alert('삭제 실패');
       loadSchedules(document.getElementById('sort').value);
     }
 
     async function toggleDone(id, checked) {
-      await supabase.from('sche').update({ done: checked }).eq('id', id);
+      await supabase.from('sche2').update({ done: checked }).eq('id', id);
     }
 
     document.getElementById('sort').addEventListener('change', e => loadSchedules(e.target.value));
