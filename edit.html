@@ -240,8 +240,8 @@ ${m}월 ${day}일(${dayName}) ${timeStr} ${num}명
       const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
       const telURI = `tel:${tel}`;
 
-      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 140 });
-      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 140 });
+      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 240 });
+      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 240 });
 
       document.getElementById('qrModal').classList.add('show');
     }
