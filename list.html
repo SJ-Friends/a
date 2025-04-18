@@ -107,8 +107,12 @@
       if (error) return alert('데이터 불러오기 실패');
 
       let filtered = data;
-      if (!showDone) filtered = filtered.filter(item => item.done !== true && item.done !== 'true');
-      if (!showReserved) filtered = filtered.filter(item => item.res_c !== true && item.res_c !== 'true');
+      if (!showDone) {
+        filtered = filtered.filter(item => item.done !== true && item.done !== 'true');
+      }
+      if (!showReserved) {
+        filtered = filtered.filter(item => item.res_c !== true && item.res_c !== 'true');
+      }
 
       const tbody = document.querySelector('#schedule-table tbody');
       tbody.innerHTML = '';
