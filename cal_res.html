@@ -93,12 +93,16 @@
       white-space: pre-wrap !important;
       word-break: break-word;
     }
+    .fc-gray-italic .fc-event-title {
+      color: #888 !important;
+      font-style: italic !important;
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <img src="logo.jpg" alt="로고">
-    <h1>일상을 여행처럼 예약캘린더 보기</h1>
+    <h1>일정을 여행처럼 예약캘린더 보기</h1>
   </div>
 
   <div class="controls">
@@ -134,7 +138,7 @@
     }
 
     async function loadEvents() {
-      const { data, error } = await supabase.from('sche').select('*').eq('res_c', true);
+      const { data, error } = await supabase.from('sche').select('*').not('res_d', 'is', null);
       if (error) {
         alert('예약 일정 불러오기 실패');
         return [];
@@ -156,14 +160,17 @@
         const content = `${item.title || '업체명 없음'} (${item.loca || '-'})\n${formatCost(item.cost)} ${item.res_t || '-'} ${item.res_p || '-'}명`;
         const color = colorMap[item.office || '기타'];
 
+        const isConfirmed = item.res_c === true;
+
         return {
           id: item.id,
           title: content,
           start: item.res_d,
           backgroundColor: color,
           borderColor: color,
-          textColor: '#000',
-          display: 'block'
+          textColor: isConfirmed ? '#000' : '#888',
+          display: 'block',
+          classNames: isConfirmed ? [] : ['fc-gray-italic']
         };
       });
     }
