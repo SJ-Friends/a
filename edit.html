@@ -173,7 +173,7 @@
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     async function loadData() {
-      const { data, error } = await supabase.from('sche2').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('sche').select('*').eq('id', id).single();
       if (error || !data) return alert('데이터 로드 실패');
 
       document.getElementById('title').value = data.title;
@@ -270,7 +270,7 @@ ${m}월 ${day}일(${dayName}) ${timeStr} ${num}명
         dayValues[day] = document.getElementById(day).checked ? 'Y' : null;
       });
 
-      const { error } = await supabase.from('sche2').update({
+      const { error } = await supabase.from('sche').update({
         title, loca, date_s, date_e, cost, tel, office, memo, done,
         res_d, res_t, res_p, res_c, ...dayValues
       }).eq('id', id);

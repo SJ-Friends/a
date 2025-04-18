@@ -134,7 +134,7 @@
     }
 
     async function loadEvents() {
-      const { data, error } = await supabase.from('sche2').select('*').eq('res_c', true);
+      const { data, error } = await supabase.from('sche').select('*').eq('res_c', true);
       if (error) {
         alert('예약 일정 불러오기 실패');
         return [];

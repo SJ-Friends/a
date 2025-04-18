@@ -116,7 +116,7 @@
         return;
       }
 
-      const { error } = await supabase.from('sche2').insert([{
+      const { error } = await supabase.from('sche').insert([{
         title, loca, date_s, date_e, cost, tel, office, memo, ...dayValues
       }]);
 

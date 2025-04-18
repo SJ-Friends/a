@@ -194,7 +194,7 @@
 
     async function loadEvents() {
       const showDone = document.getElementById('showDone').checked;
-      const { data, error } = await supabase.from('sche2').select('*');
+      const { data, error } = await supabase.from('sche').select('*');
       if (error) {
         alert('일정 불러오기 실패');
         return [];
@@ -248,7 +248,7 @@
       const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
       const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
       const todayName = dayNames[today.getDay()];
-      const { data } = await supabase.from('sche2').select('*');
+      const { data } = await supabase.from('sche').select('*');
 
       const available = [], deadline = [], weekend = [];
 

@@ -173,7 +173,7 @@
 
     async function loadDoneData(year, month) {
       updateTitle(year, month);
-      const { data, error } = await supabase.from('sche2').select('*');
+      const { data, error } = await supabase.from('sche').select('*');
       if (error) {
         alert('데이터 불러오기 실패');
         return;
