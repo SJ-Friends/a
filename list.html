@@ -11,9 +11,8 @@
     th:nth-child(5), td:nth-child(5) { min-width: 80px; }
     th:nth-child(8), td:nth-child(8) { min-width: 120px; }
     th:nth-child(9), td:nth-child(9) { min-width: 90px; }
-    th:nth-child(10), td:nth-child(10) { min-width: 60px; }
-    th:nth-child(11), td:nth-child(11),
-    th:nth-child(12), td:nth-child(12) { min-width: 70px; }
+    th:nth-child(10), td:nth-child(10),
+    th:nth-child(11), td:nth-child(11) { min-width: 70px; }
 
     body { font-family: 'Segoe UI', sans-serif; padding: 30px; max-width: 1000px; margin: auto; }
     .header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
@@ -57,9 +56,11 @@
       </select>
     </div>
     <div class="button-group">
-      <label><input checked id="showDone" type="checkbox"/> 완료 포함</label>
+      <label><input id="showDone" type="checkbox" checked/> 완료 포함</label>
+      <label><input id="showReserved" type="checkbox"/> 예약완료 포함</label>
       <button onclick="location.href='index.html'">➕ 등록하기</button>
       <button onclick="location.href='cal.html'">📅 달력 보기</button>
+      <button onclick="location.href='cal_res.html'">📅 예약캘린더</button>
     </div>
   </div>
 
@@ -76,7 +77,6 @@
         <th>불가능 요일</th>
         <th>체험단</th>
         <th>메모</th>
-        
         <th>삭제</th>
       </tr>
     </thead>
@@ -95,69 +95,43 @@
     function formatShortDate(dateStr) {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        return parts[1] + '/' + parts[2];
-      }
-      return dateStr;
+      return parts.length === 3 ? `${parts[1]}/${parts[2]}` : dateStr;
     }
 
     async function loadSchedules(sortBy = 'date_e') {
       const showDone = document.getElementById('showDone').checked;
+      const showReserved = document.getElementById('showReserved').checked;
 
-      let query = supabase.from('sche').select('*');
-      query = query.order(sortBy, { ascending: true });
-
+      let query = supabase.from('sche').select('*').order(sortBy, { ascending: true });
       const { data, error } = await query;
       if (error) return alert('데이터 불러오기 실패');
 
-      const filtered = showDone
-        ? data
-        : data.filter(item => item.done !== true && item.done !== 'true');
+      let filtered = data;
+      if (!showDone) filtered = filtered.filter(item => item.done !== true && item.done !== 'true');
+      if (!showReserved) filtered = filtered.filter(item => item.res_c !== true && item.res_c !== 'true');
 
       const tbody = document.querySelector('#schedule-table tbody');
       tbody.innerHTML = '';
 
-      filtered.forEach((item, index) => {
+      filtered.forEach(item => {
         const tr = document.createElement('tr');
         const unavailable = dayNames.filter(day => item[day] !== 'Y').map(day => dayKor[day]).join(', ');
         const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
         const mapLink = `https://map.naver.com/v5/search/${mapQuery}`;
 
         tr.innerHTML = `
-          <td><input type="checkbox" ${item.done === true || item.done === 'true' ? 'checked' : ''} onchange="toggleDone(${item.id}, this.checked)"></td>
-          <td><input type="checkbox" ${item.res_c === true || item.res_c === "true" ? "checked" : ""} disabled></td>
+          <td><input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleDone(${item.id}, this.checked)"></td>
+          <td><input type="checkbox" ${item.res_c ? 'checked' : ''} onchange="toggleRes(${item.id}, this.checked)"></td>
           <td><a href='edit.html?id=${item.id}'>${item.title}</a></td>
           <td>${item.cost}</td>
           <td><span class="link-button" onclick="window.open('${mapLink}', '_blank')">${item.loca}</span></td>
+          <td>${formatShortDate(item.date_s)}</td>
+          <td>${formatShortDate(item.date_e)}</td>
+          <td>${unavailable}</td>
+          <td>${item.office || ''}</td>
+          <td class="tooltip" title="${item.memo || ''}">💬</td>
+          <td><button onclick="deleteSchedule(${item.id})">삭제</button></td>
         `;
-
-        const tdStart = document.createElement('td');
-        tdStart.textContent = formatShortDate(item.date_s);
-        tr.appendChild(tdStart);
-
-        const tdEnd = document.createElement('td');
-        tdEnd.textContent = formatShortDate(item.date_e);
-        tr.appendChild(tdEnd);
-
-        const tdUnavailable = document.createElement('td');
-        tdUnavailable.textContent = unavailable;
-        tr.appendChild(tdUnavailable);
-
-        const tdOffice = document.createElement('td');
-        tdOffice.textContent = item.office || '';
-        tr.appendChild(tdOffice);
-
-        const tdMemo = document.createElement('td');
-        tdMemo.className = "tooltip";
-        tdMemo.title = item.memo || '';
-        tdMemo.innerHTML = "💬";
-        tr.appendChild(tdMemo);
-
-     
-
-        const tdDelete = document.createElement('td');
-        tdDelete.innerHTML = `<button onclick="deleteSchedule(${item.id})">삭제</button>`;
-        tr.appendChild(tdDelete);
 
         tbody.appendChild(tr);
       });
@@ -165,8 +139,7 @@
 
     async function deleteSchedule(id) {
       if (!confirm('정말 삭제하시겠습니까?')) return;
-      const { error } = await supabase.from('sche').delete().eq('id', id);
-      if (error) return alert('삭제 실패');
+      await supabase.from('sche').delete().eq('id', id);
       loadSchedules(document.getElementById('sort').value);
     }
 
@@ -174,8 +147,13 @@
       await supabase.from('sche').update({ done: checked }).eq('id', id);
     }
 
+    async function toggleRes(id, checked) {
+      await supabase.from('sche').update({ res_c: checked }).eq('id', id);
+    }
+
     document.getElementById('sort').addEventListener('change', e => loadSchedules(e.target.value));
     document.getElementById('showDone').addEventListener('change', () => loadSchedules(document.getElementById('sort').value));
+    document.getElementById('showReserved').addEventListener('change', () => loadSchedules(document.getElementById('sort').value));
     window.addEventListener('DOMContentLoaded', () => loadSchedules('date_e'));
   </script>
 </body>
