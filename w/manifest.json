@@ -1,0 +1,12 @@
+{
+  "name": "일정을 여행처럼 예약캘린더",
+  "short_name": "예약캘린더",
+  "start_url": "cal_res.html",
+  "display": "standalone",
+  "background_color": "#f9f9f9",
+  "theme_color": "#1d72b8",
+  "icons": [
+    { "src": "logo.jpg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "logo.jpg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}
