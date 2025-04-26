@@ -133,7 +133,8 @@
   <button onclick="updateSchedule()">✔️ 수정 완료</button>
 
   <script>
-    const supabase = window.supabase.createClient('https://xxmtxuhcdzidhrefrvwf.supabase.co', 'YOUR_API_KEY');
+    const supabase = window.supabase.createClient('https://xxmtxuhcdzidhrefrvwf.supabase.co', 
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg');
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
