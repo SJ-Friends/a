@@ -35,40 +35,10 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-    .modal-overlay.show {
-      display: flex;
-      opacity: 1;
-    }
-    .modal {
-      position: relative;
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      animation: fadeIn 0.3s ease;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-    }
-    .modal .close-btn {
-      align-self: flex-end;
-      font-size: 24px;
-      font-weight: bold;
-      background: none;
-      border: none;
-      color: #000;
-      line-height: 1;
-      padding: 0;
-      margin-bottom: 10px;
-      cursor: pointer;
-      z-index: 1001;
-    }
-    @keyframes fadeIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal { background: #fff; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: fadeIn 0.3s ease; z-index: 1000; display: flex; flex-direction: column; }
+    .modal .close-btn { align-self: flex-end; font-size: 24px; font-weight: bold; background: none; border: none; color: #000; line-height: 1; padding: 0; margin-bottom: 10px; cursor: pointer; z-index: 1001; }
+    @keyframes fadeIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -82,15 +52,13 @@
     <input id="title" type="text"/>
   </div>
 
-<div class="form-group">
-  <label for="loca">위치</label>
-  <div style="display: flex; gap: 10px; align-items: center;">
-    <input id="loca" type="text" style="flex: 1; height: 20px; display: flex; align-items: center;"/>
-    <button id="mapBtn" title="지도에서 보기"
-      style="height: 40px; padding: 0 12px; font-size: 18px; display: flex; align-items: center; justify-content: center;margin-top: 9px;">📍</button>
+  <div class="form-group">
+    <label for="loca">위치</label>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <input id="loca" type="text" style="flex: 1; height: 20px;"/>
+      <button id="mapBtn" title="지도에서 보기" style="height: 40px; padding: 0 12px; font-size: 18px; display: flex; align-items: center; justify-content: center; margin-top: 9px;">📍</button>
+    </div>
   </div>
-</div>
-
 
   <div class="form-group">
     <label>기간</label>
@@ -121,9 +89,6 @@
     <label for="tel">신청 연락처</label>
     <div style="display: flex; gap: 10px; align-items: center; margin-top: 9px; height: 40px;">
       <input id="tel" inputmode="numeric" pattern="[0-9]*" style="flex: 1;" type="text"/>
-      <button id="smsLink" style="height: 40px; padding: 0 12px; font-size: 18px; display: flex; align-items: center; justify-content: center;margin-top: 9px;">📩</button>
-      <button id="callLink" style="height: 40px; padding: 0 12px; font-size: 18px; display: flex; align-items: center; justify-content: center;margin-top: 9px;" >📞</button>
-      <button onclick="openQRModal()"style="height: 40px; padding: 0 12px; font-size: 18px; display: flex; align-items: center; justify-content: center;margin-top: 9px;" >📷</button>
     </div>
   </div>
 
@@ -151,6 +116,12 @@
   </div>
 
   <div class="form-group">
+    <label for="link">링크</label>
+    <input id="link" type="text" placeholder="https://example.com" oninput="showLink()"/>
+    <div id="linkArea" style="margin-top: 8px;"></div>
+  </div>
+
+  <div class="form-group">
     <label for="memo">Memo</label>
     <textarea id="memo" rows="3"></textarea>
   </div>
@@ -160,28 +131,22 @@
   </div>
 
   <button onclick="updateSchedule()">✔️ 수정 완료</button>
-  <button onclick="location.href='list.html'">📋 목록 보기</button>
-
-  <div class="modal-overlay" id="qrModal">
-    <div class="modal">
-      <button class="close-btn" onclick="closeQRModal()">✖</button>
-      <h2>📱 전화 & 문자 QR</h2>
-      <div style="display: flex; gap: 30px; justify-content: center;">
-        <div><p>📞 전화</p><canvas id="qrTelCanvas"></canvas></div>
-        <div><p>💬 문자</p><canvas id="qrSmsCanvas"></canvas></div>
-      </div>
-    </div>
-  </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-    );
-
+    const supabase = window.supabase.createClient('https://xxmtxuhcdzidhrefrvwf.supabase.co', 'YOUR_API_KEY');
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    function showLink() {
+      const linkValue = document.getElementById('link').value.trim();
+      const linkArea = document.getElementById('linkArea');
+      if (linkValue.startsWith('http://') || linkValue.startsWith('https://')) {
+        linkArea.innerHTML = `<a href="${linkValue}" target="_blank">${linkValue}</a>`;
+      } else {
+        linkArea.innerHTML = '';
+      }
+    }
 
     async function loadData() {
       const { data, error } = await supabase.from('sche').select('*').eq('id', id).single();
@@ -194,76 +159,14 @@
       document.getElementById('cost').value = data.cost;
       document.getElementById('tel').value = data.tel || '';
       document.getElementById('office').value = data.office || '기타';
-      document.getElementById('memo').value = data.memo;
+      document.getElementById('memo').value = data.memo || '';
       document.getElementById('done').checked = data.done === true;
-
-      document.getElementById('res_d').value = data.res_d || '';
-      document.getElementById('res_t').value = data.res_t || '17:00';
-      document.getElementById('res_p').value = data.res_p || '2';
-      document.getElementById('res_c').checked = data.res_c === true;
-
-      const cleaned = (data.tel || '').replace(/[^0-9]/g, '');
-      if (cleaned) {
-        const resDate = new Date(data.res_d || '');
-        const m = resDate.getMonth() + 1;
-        const d = resDate.getDate();
-        const weekday = ['일', '월', '화', '수', '목', '금', '토'];
-        const dayName = weekday[resDate.getDay()];
-        const t = (data.res_t || '17:00').split(':');
-        const h = parseInt(t[0], 10);
-        const min = parseInt(t[1], 10);
-        const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
-        const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
-        const smsText = `안녕하세요\n'${data.title}' 블로그체험단 일상을여행처럼 남주현입니다\n${m}월 ${d}일(${dayName}) ${timeStr} ${data.res_p || 2}명\n예약가능할까요?`;
-        const smsLink = `sms:${cleaned}?body=${encodeURIComponent(smsText)}`;
-        document.getElementById('smsLink').onclick = () => window.location.href = smsLink;
-        document.getElementById('callLink').onclick = () => window.location.href = `tel:${cleaned}`;
-      }
+      document.getElementById('link').value = data.link || '';
+      showLink();
 
       days.forEach(day => {
         document.getElementById(day).checked = data[day] === 'Y';
       });
-    }
-
-    document.getElementById('mapBtn').onclick = function () {
-      const title = document.getElementById('title').value.trim();
-      const loca = document.getElementById('loca').value.trim();
-      if (!title || !loca) {
-        alert("업체명과 위치를 모두 입력해주세요");
-        return;
-      }
-      const query = encodeURIComponent(`${title} ${loca}`);
-      window.open(`https://map.naver.com/v5/search/${query}`, '_blank');
-    };
-
-    function openQRModal() {
-      const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
-      if (!tel) return alert('전화번호를 입력해주세요');
-      const title = document.getElementById('title').value;
-      const d = new Date(document.getElementById('res_d').value);
-      const m = d.getMonth() + 1;
-      const day = d.getDate();
-      const weekday = ['일', '월', '화', '수', '목', '금', '토'];
-      const dayName = weekday[d.getDay()];
-      const time = document.getElementById('res_t').value.split(':');
-      const h = parseInt(time[0]);
-      const min = parseInt(time[1]);
-      const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
-      const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
-      const num = document.getElementById('res_p').value || 2;
-
-      const smsText = `안녕하세요\n'${title}' 블로그체험단 일상을여행처럼 남주현입니다\n${m}월 ${day}일(${dayName}) ${timeStr} ${num}명\n예약가능할까요?`;
-      const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
-      const telURI = `tel:${tel}`;
-
-      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 240 });
-      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 240 });
-
-      document.getElementById('qrModal').classList.add('show');
-    }
-
-    function closeQRModal() {
-      document.getElementById('qrModal').classList.remove('show');
     }
 
     async function updateSchedule() {
@@ -276,10 +179,7 @@
       const office = document.getElementById('office').value;
       const memo = document.getElementById('memo').value.trim();
       const done = document.getElementById('done').checked;
-      const res_d = document.getElementById('res_d').value;
-      const res_t = document.getElementById('res_t').value;
-      const res_p = document.getElementById('res_p').value;
-      const res_c = document.getElementById('res_c').checked;
+      const link = document.getElementById('link').value.trim();
 
       const dayValues = {};
       days.forEach(day => {
@@ -287,8 +187,7 @@
       });
 
       const { error } = await supabase.from('sche').update({
-        title, loca, date_s, date_e, cost, tel, office, memo, done,
-        res_d, res_t, res_p, res_c, ...dayValues
+        title, loca, date_s, date_e, cost, tel, office, memo, done, link, ...dayValues
       }).eq('id', id);
 
       if (error) return alert('수정 실패');
