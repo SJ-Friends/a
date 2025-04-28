@@ -117,11 +117,15 @@
       const showDone = document.getElementById('showDone').checked;
       const showRes = document.getElementById('showRes').checked;
 
-      const filtered = data.filter(item => {
-        const doneOk = showDone || item.done !== true;
-        const resOk = showRes ? true : item.res_c === true;
-        return doneOk && resOk;
-      });
+
+const filtered = data.filter(item => {
+  const doneOk = showDone || item.done !== true;
+  const resOk = showRes || item.res_c === true;
+  return doneOk && resOk;
+});
+
+
+      
 
       const places = new kakao.maps.services.Places();
       const bounds = new kakao.maps.LatLngBounds();
