@@ -5,7 +5,7 @@
   <title>일상을 여행처럼</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    #map { width: 100%; height: 90vh; }
+    #map { width: 100%; height: 70vh; }
     .filter-bar {
       display: flex;
       justify-content: center;
@@ -15,12 +15,24 @@
       background: #f9f9f9;
       font-size: 14px;
     }
+    #list {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .fail {
+      color: red;
+    }
   </style>
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼</h2>
+  <h2 style="text-align:center;">일상을 여행처럼!</h2>
 
   <!-- 필터바 -->
   <div class="filter-bar">
@@ -30,8 +42,15 @@
 
   <div id="map"></div>
 
+  <!-- 데이터 목록 -->
+  <div id="list">
+    <h3>📝 데이터 목록</h3>
+    <div id="success-list"></div>
+    <h3>❗ 검색 실패 목록</h3>
+    <div id="fail-list"></div>
+  </div>
+
   <script>
-    // Supabase 연결
     const supabase = window.supabase.createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
@@ -39,19 +58,20 @@
 
     const mapContainer = document.getElementById('map');
     const mapOption = {
-      center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울
+      center: new kakao.maps.LatLng(37.5665, 126.9780),
       level: 5
     };
     const map = new kakao.maps.Map(mapContainer, mapOption);
-    const places = new kakao.maps.services.Places();
-    let markers = []; // 마커 저장
-    let openInfoWindow = null; // 현재 열려있는 인포윈도우
+    let markers = [];
+    let openInfoWindow = null;
 
-    // 마커 불러오기
     async function loadAndDisplayMarkers() {
       // 기존 마커 제거
       markers.forEach(marker => marker.setMap(null));
       markers = [];
+
+      document.getElementById('success-list').innerHTML = '';
+      document.getElementById('fail-list').innerHTML = '';
 
       const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
       if (error) {
@@ -69,6 +89,7 @@
         return doneOk && resOk;
       });
 
+      const places = new kakao.maps.services.Places();
       const bounds = new kakao.maps.LatLngBounds();
 
       for (const item of filtered) {
@@ -85,7 +106,7 @@
               title: item.title
             });
 
-            markers.push(marker); // 마커 저장
+            markers.push(marker);
 
             const infoWindow = new kakao.maps.InfoWindow({
               content: `<div style="padding:5px;font-size:14px;">
@@ -101,20 +122,34 @@
               openInfoWindow = infoWindow;
             });
 
+            // 목록 추가 (성공)
+            const successList = document.getElementById('success-list');
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<a href="edit.html?id=${item.id}" target="_blank">${item.title} (${item.loca})</a>`;
+            successList.appendChild(div);
+
             bounds.extend(coords);
             map.setBounds(bounds);
           } else {
             console.warn('검색 실패:', keyword);
+
+            // 목록 추가 (실패)
+            const failList = document.getElementById('fail-list');
+            const div = document.createElement('div');
+            div.className = 'item fail';
+            div.textContent = `${item.title} (${item.loca}) - 검색 실패`;
+            failList.appendChild(div);
           }
         });
       }
     }
 
-    // 필터 체크박스 바뀔 때 마커만 새로고침
+    // 필터 변경시 새로 로드
     document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
     document.getElementById('showRes').addEventListener('change', loadAndDisplayMarkers);
 
-    // 처음 로딩
+    // 첫 로딩
     loadAndDisplayMarkers();
   </script>
 </body>
