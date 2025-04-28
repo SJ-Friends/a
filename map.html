@@ -46,22 +46,33 @@
         const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
         if (!keyword) continue;
 
-        places.keywordSearch(keyword, function(result, status) {
-          if (status === kakao.maps.services.Status.OK) {
-            const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+      places.keywordSearch(keyword, function(result, status) {
+  if (status === kakao.maps.services.Status.OK) {
+    const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
 
-            new kakao.maps.Marker({
-              map: map,
-              position: coords,
-              title: item.title
-            });
+    const marker = new kakao.maps.Marker({
+      map: map,
+      position: coords,
+      title: item.title
+    });
 
-            bounds.extend(coords);
-            map.setBounds(bounds);
-          } else {
-            console.warn('검색 실패:', keyword);
-          }
-        });
+    // ➡ 여기 추가: 마커 클릭하면 인포윈도우 열기
+    const infoWindow = new kakao.maps.InfoWindow({
+      content: `<div style="padding:5px;font-size:14px;">
+                  <b>${item.title}</b><br>${item.loca}
+                </div>`
+    });
+
+    kakao.maps.event.addListener(marker, 'click', function() {
+      infoWindow.open(map, marker);
+    });
+
+    bounds.extend(coords);
+    map.setBounds(bounds);
+  } else {
+    console.warn('검색 실패:', keyword);
+  }
+});
       }
     }
 
