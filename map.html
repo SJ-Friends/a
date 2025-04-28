@@ -2,30 +2,43 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>일상을 여행처럼</title>
+  <title>일상을 여행처럼!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     #map { width: 100%; height: 90vh; }
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px;
+      background: #f9f9f9;
+      font-size: 14px;
+    }
   </style>
-  <!-- 카카오 지도 API (네 앱키 적용) -->
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼</h2>
+  <h2 style="text-align:center;">일상을 여행처럼!</h2>
+
+  <!-- 필터 바 추가 -->
+  <div class="filter-bar">
+    <label><input type="checkbox" id="showDone"> 완료 포함</label>
+    <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
+  </div>
+
   <div id="map"></div>
 
   <script>
-    // Supabase 연결
     const supabase = window.supabase.createClient(
-      'https://xxmtxuhcdzidhrefrvwf.supabase.co', // 네 Supabase URL
+      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
     );
 
     const mapContainer = document.getElementById('map');
     const mapOption = {
-      center: new kakao.maps.LatLng(37.5665, 126.9780), // 초기 서울
+      center: new kakao.maps.LatLng(37.5665, 126.9780),
       level: 5
     };
 
@@ -33,51 +46,78 @@
     const places = new kakao.maps.services.Places();
     const bounds = new kakao.maps.LatLngBounds();
 
+    let openInfoWindow = null; // 현재 열려있는 인포윈도우 저장용
+
     async function loadAndDisplayMarkers() {
-      // DB에서 title + loca 가져오기
-      const { data, error } = await supabase.from('sche').select('title, loca');
+      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
       if (error) {
         alert('DB 데이터 불러오기 실패!');
         console.error(error);
         return;
       }
 
-      for (const item of data) {
+      const showDone = document.getElementById('showDone').checked;
+      const showRes = document.getElementById('showRes').checked;
+
+      // 필터 적용
+      const filtered = data.filter(item => {
+        const doneOk = showDone || item.done !== true;
+        const resOk = showRes ? true : item.res_c === true;
+        return doneOk && resOk;
+      });
+
+      for (const item of filtered) {
         const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
         if (!keyword) continue;
 
-      places.keywordSearch(keyword, function(result, status) {
-  if (status === kakao.maps.services.Status.OK) {
-    const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+        places.keywordSearch(keyword, function(result, status) {
+          if (status === kakao.maps.services.Status.OK) {
+            const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
 
-    const marker = new kakao.maps.Marker({
-      map: map,
-      position: coords,
-      title: item.title
-    });
+            const marker = new kakao.maps.Marker({
+              map: map,
+              position: coords,
+              title: item.title
+            });
 
-    // ➡ 여기 추가: 마커 클릭하면 인포윈도우 열기
-    const infoWindow = new kakao.maps.InfoWindow({
-      content: `<div style="padding:5px;font-size:14px;">
-                  <b>${item.title}</b><br>${item.loca}
-                </div>`
-    });
+            const infoWindow = new kakao.maps.InfoWindow({
+              content: `<div style="padding:5px;font-size:14px;">
+                          <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
+                            <b>${item.title}</b><br>${item.loca}
+                          </a>
+                        </div>`
+            });
 
-    kakao.maps.event.addListener(marker, 'click', function() {
-      infoWindow.open(map, marker);
-    });
+            kakao.maps.event.addListener(marker, 'click', function() {
+              if (openInfoWindow) openInfoWindow.close();
+              infoWindow.open(map, marker);
+              openInfoWindow = infoWindow;
+            });
 
-    bounds.extend(coords);
-    map.setBounds(bounds);
-  } else {
-    console.warn('검색 실패:', keyword);
-  }
-});
+            bounds.extend(coords);
+            map.setBounds(bounds);
+          } else {
+            console.warn('검색 실패:', keyword);
+          }
+        });
       }
     }
 
-    // 실행
+    // 최초 실행
     loadAndDisplayMarkers();
+
+    // 필터 체크박스 바뀔 때 다시 로드
+    document.getElementById('showDone').addEventListener('change', () => {
+      resetMap();
+    });
+    document.getElementById('showRes').addEventListener('change', () => {
+      resetMap();
+    });
+
+    function resetMap() {
+      mapContainer.innerHTML = ""; // 지도 리셋
+      location.reload(); // 전체 새로고침 (간단하고 안전하게)
+    }
   </script>
 </body>
 </html>
