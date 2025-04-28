@@ -171,223 +171,226 @@
     </div>
   </div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-    );
+<script>
+  const supabase = window.supabase.createClient(
+    'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+  );
 
-    function formatCost(value) {
-      const num = parseInt(value, 10);
-      if (isNaN(num)) return '0원';
-      return num.toLocaleString() + '원';
-    }
+  function formatCost(value) {
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return '0원';
+    return num.toLocaleString() + '원';
+  }
 
-    function getColorMap(offices) {
-      const palette = ['#e9fdc8', '#c4f2dc', '#fddd85', '#f9cccc', '#bbcbf6'];
-      const colorMap = {};
-      offices.forEach((office, i) => {
-        colorMap[office] = palette[i % palette.length];
-      });
-      return colorMap;
-    }
-
-    async function loadEvents() {
-      const showDone = document.getElementById('showDone').checked;
-      const { data, error } = await supabase.from('sche').select('*');
-      if (error) {
-        alert('일정 불러오기 실패');
-        return [];
-      }
-
-      const filtered = showDone ? data : data.filter(item => !item.done);
-      const uniqueOffices = [...new Set(filtered.map(item => item.office || '기타'))];
-      const colorMap = getColorMap(uniqueOffices);
-
-      const legend = document.getElementById('legend');
-      legend.innerHTML = '<strong>체험단별 색상:</strong><br>' + uniqueOffices.map(office => {
-        const color = colorMap[office];
-        return `
-          <span class="legend-item">
-            <span class="legend-color" style="background:${color}"></span>${office}
-          </span>`;
-      }).join('');
-
-      return filtered.map(item => {
-        const color = item.done ? '#ccc' : colorMap[item.office || '기타'];
-        return {
-          id: item.id,
-          title: `${item.title} (${formatCost(item.cost || '0')})`,
-          start: item.date_s,
-          end: item.date_e ? new Date(new Date(item.date_e).getTime() + 86400000).toISOString().split('T')[0] : item.date_s,
-          extendedProps: { memo: item.memo, loca: item.loca, cost: item.cost, id: item.id },
-          backgroundColor: color,
-          borderColor: color,
-          textColor: '#000'
-        };
-      });
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('reportModal');
-      modal.classList.remove('show');
-      setTimeout(() => { modal.style.display = 'none'; }, 300);
-    }
-
-    
-    async function openModal(dateStr) {
-      const modal = document.getElementById('reportModal');
-      const content = document.getElementById('modalContent');
-      const title = document.getElementById('modalTitle');
-      title.textContent = `일상을 여행처럼 ${dateStr} Report`;
-      content.innerHTML = '불러오는 중...';
-      modal.style.display = 'flex';
-      setTimeout(() => modal.classList.add('show'), 10);
-
-      const today = new Date(dateStr);
-      const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-      const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
-      const todayName = dayNames[today.getDay()];
-      const { data } = await supabase.from('sche').select('*');
-
-      const available = [], deadline = [], weekend = [];
-
-      const getNextWeekday = (from, day) => {
-        const d = new Date(from); d.setDate(d.getDate() + (day + 7 - d.getDay()) % 7);
-        return d;
-      };
-
-      const thisFri = getNextWeekday(today, 5),
-            thisSat = getNextWeekday(today, 6),
-            thisSun = getNextWeekday(today, 0);
-      const nextFri = new Date(thisFri); nextFri.setDate(thisFri.getDate() + 7);
-      const nextSat = new Date(thisSat); nextSat.setDate(thisSat.getDate() + 7);
-      const nextSun = new Date(thisSun); nextSun.setDate(thisSun.getDate() + 7);
-
-      const isInRange = (d, s, e) => d >= s && d <= e;
-
-      for (const item of data) {
-        if (item.done === true) continue;
-        const start = new Date(item.date_s);
-        const end = new Date(item.date_e);
-
-        if (item[todayName] === 'Y' && start <= today && end >= today)
-          available.push(item);
-
-        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-        if (diff >= 0 && diff <= 6) deadline.push(item);
-
-        const hasThisWeekend = [thisFri, thisSat, thisSun].some(d => isInRange(d, today, end));
-        const hasNextWeekend = [nextFri, nextSat, nextSun].some(d => isInRange(d, today, end));
-        if (hasThisWeekend && !hasNextWeekend) weekend.push(item);
-      }
-function makeList(list) {
-  return list.map(item => {
-    const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
-    const end = new Date(item.date_e);
-    const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-    const dDay = diff === 0 ? 'D-DAY' : `D-${diff}`;
-    const costStr = formatCost(item.cost || '0');
-
-    // 예약일자: 같은 줄에 빨간색으로 표시
-    let reserveStr = '';
-    if (item.res_d) {
-      const d = new Date(item.res_d);
-      if (!isNaN(d)) {
-        d.setHours(d.getHours() + 9); // UTC 보정 (한국 시간)
-        const m = d.getMonth() + 1;
-        const day = d.getDate();
-        const h = d.getHours().toString().padStart(2, '0');
-        reserveStr = ` <span style="color: red;">예약일자: ${m}월 ${day}일 ${h}시</span>`;
-      }
-    }
-
-const titleLine = `
-  <strong><a href="edit.html?id=${item.id}" style="text-decoration: none; color: inherit;">
-    ${item.title}
-  </a></strong> 
-  (<span class="link-button" style="text-decoration: none; color: #0077cc; cursor: pointer;" 
-    onclick="window.open('https://map.naver.com/v5/search/${mapQuery}', '_blank')">
-    ${item.loca} / ${costStr}${reserveStr}
-  </span>)`;
-
-
-    // 불가능 요일
-    const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
-    const unavailableDays = Object.entries(dayKor)
-      .filter(([k]) => item[k] !== 'Y')
-      .map(([_, v]) => v)
-      .join(', ');
-
-    return `
-      <li>
-        ${titleLine}
-        <div class="small-note">불가능요일: ${unavailableDays || '없음'}</div>
-        <div class="small-note">마감일: ${item.date_e || '미정'} (${dDay})</div>
-      </li>`;
-  }).join('');
-}
-
-
-      content.innerHTML = `
-        <h3>✅ 체험가능대상 (${available.length}건)</h3>
-        <ul>${makeList(available)}</ul>
-        <h3>⏰ 마감임박 (${deadline.length}건)</h3>
-        <ul>${makeList(deadline)}</ul>
-        <h3>🔥 이번 주말이 마지막! (${weekend.length}건)</h3>
-        <ul>${makeList(weekend)}</ul>
-      `;
-    }
-
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById('showDone').checked = false;
-
-      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth',
-        locale: 'ko',
-        height: 'auto',
-        headerToolbar: {
-          left: 'prevBtn,nextBtn todayBtn',
-          center: 'title',
-          right: 'doneBtn'
-        },
-        customButtons: {
-          prevBtn: {
-            text: '◁',
-            click() { calendar.prev(); }
-          },
-          nextBtn: {
-            text: '▷',
-            click() { calendar.next(); }
-          },
-          todayBtn: {
-            text: '📍 이번달',
-            click() { calendar.today(); }
-          },
-          doneBtn: {
-            text: '📈 월간실적',
-            click() { location.href = 'done.html'; }
-          }
-        },
-        titleFormat: { year: 'numeric', month: 'long' },
-        events: await loadEvents(),
-        eventClick: info => {
-          if (confirm('이 일정을 수정하시겠습니까?')) {
-            window.location.href = `edit.html?id=${info.event.extendedProps.id}`;
-          }
-        },
-        dateClick: info => openModal(info.dateStr)
-      });
-
-      calendar.render();
-
-      document.getElementById('showDone').addEventListener('change', async () => {
-        const events = await loadEvents();
-        calendar.removeAllEvents();
-        calendar.addEventSource(events);
-      });
+  function getColorMap(offices) {
+    const palette = ['#e9fdc8', '#c4f2dc', '#fddd85', '#f9cccc', '#bbcbf6'];
+    const colorMap = {};
+    offices.forEach((office, i) => {
+      colorMap[office] = palette[i % palette.length];
     });
-  </script>
+    return colorMap;
+  }
+
+  async function loadEvents() {
+    const showDone = document.getElementById('showDone').checked;
+    const { data, error } = await supabase.from('sche').select('*');
+    if (error) {
+      alert('일정 불러오기 실패');
+      return [];
+    }
+
+    const filtered = showDone ? data : data.filter(item => !item.done);
+    const uniqueOffices = [...new Set(filtered.map(item => item.office || '기타'))];
+    const colorMap = getColorMap(uniqueOffices);
+
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '<strong>체험단별 색상:</strong><br>' + uniqueOffices.map(office => {
+      const color = colorMap[office];
+      return `
+        <span class="legend-item">
+          <span class="legend-color" style="background:${color}"></span>${office}
+        </span>`;
+    }).join('');
+
+    return filtered.map(item => {
+      const color = item.done ? '#ccc' : colorMap[item.office || '기타'];
+      return {
+        id: item.id,
+        title: `${item.title} (${formatCost(item.cost || '0')})`,
+        start: item.date_s,
+        end: item.date_e ? new Date(new Date(item.date_e).getTime() + 86400000).toISOString().split('T')[0] : item.date_s,
+        extendedProps: { memo: item.memo, loca: item.loca, cost: item.cost, id: item.id },
+        backgroundColor: color,
+        borderColor: color,
+        textColor: '#000'
+      };
+    });
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('reportModal');
+    modal.classList.remove('show');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+
+  async function openModal(dateStr) {
+    const modal = document.getElementById('reportModal');
+    const content = document.getElementById('modalContent');
+    const title = document.getElementById('modalTitle');
+    title.textContent = `일상을 여행처럼 ${dateStr} Report`;
+    content.innerHTML = '불러오는 중...';
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+
+    const today = new Date(dateStr);
+    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
+    const todayName = dayNames[today.getDay()];
+    const { data } = await supabase.from('sche').select('*');
+
+    const available = [], deadline = [], weekend = [];
+
+    const getNextWeekday = (from, day) => {
+      const d = new Date(from); d.setDate(d.getDate() + (day + 7 - d.getDay()) % 7);
+      return d;
+    };
+
+    const thisFri = getNextWeekday(today, 5),
+          thisSat = getNextWeekday(today, 6),
+          thisSun = getNextWeekday(today, 0);
+    const nextFri = new Date(thisFri); nextFri.setDate(thisFri.getDate() + 7);
+    const nextSat = new Date(thisSat); nextSat.setDate(thisSat.getDate() + 7);
+    const nextSun = new Date(thisSun); nextSun.setDate(thisSun.getDate() + 7);
+
+    const isInRange = (d, s, e) => d >= s && d <= e;
+
+    for (const item of data) {
+      if (item.done === true) continue;
+      const start = new Date(item.date_s);
+      const end = new Date(item.date_e);
+
+      if (item[todayName] === 'Y' && start <= today && end >= today)
+        available.push(item);
+
+      const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+      if (diff >= 0 && diff <= 6) deadline.push(item);
+
+      const hasThisWeekend = [thisFri, thisSat, thisSun].some(d => isInRange(d, today, end));
+      const hasNextWeekend = [nextFri, nextSat, nextSun].some(d => isInRange(d, today, end));
+      if (hasThisWeekend && !hasNextWeekend) weekend.push(item);
+    }
+
+    function makeList(list) {
+      return list.map(item => {
+        const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
+        const end = new Date(item.date_e);
+        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+        const dDay = diff === 0 ? 'D-DAY' : `D-${diff}`;
+        const costStr = formatCost(item.cost || '0');
+
+        let reserveStr = '';
+        if (item.res_d) {
+          const d = new Date(item.res_d);
+          if (!isNaN(d)) {
+            d.setHours(d.getHours() + 9);
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            const h = d.getHours().toString().padStart(2, '0');
+            reserveStr = ` <span style="color: red;">예약일자: ${m}월 ${day}일 ${h}시</span>`;
+          }
+        }
+
+        const titleLine = `
+          <strong><a href="edit.html?id=${item.id}" style="text-decoration: none; color: inherit;">
+            ${item.title}
+          </a></strong> 
+          (<span class="link-button" style="text-decoration: none; color: #0077cc; cursor: pointer;" 
+            onclick="window.open('https://map.naver.com/v5/search/${mapQuery}', '_blank')">
+            ${item.loca} / ${costStr}${reserveStr}
+          </span>)`;
+
+        const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
+        const unavailableDays = Object.entries(dayKor)
+          .filter(([k]) => item[k] !== 'Y')
+          .map(([_, v]) => v)
+          .join(', ');
+
+        return `
+          <li>
+            ${titleLine}
+            <div class="small-note">불가능요일: ${unavailableDays || '없음'}</div>
+            <div class="small-note">마감일: ${item.date_e || '미정'} (${dDay})</div>
+          </li>`;
+      }).join('');
+    }
+
+    content.innerHTML = `
+      <h3>✅ 체험가능대상 (${available.length}건)</h3>
+      <ul>${makeList(available)}</ul>
+      <h3>⏰ 마감임박 (${deadline.length}건)</h3>
+      <ul>${makeList(deadline)}</ul>
+      <h3>🔥 이번 주말이 마지막! (${weekend.length}건)</h3>
+      <ul>${makeList(weekend)}</ul>
+    `;
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('showDone').checked = false;
+
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+      initialView: 'dayGridMonth',
+      locale: 'ko',
+      firstDay: 1, // (2) 월요일부터 시작 추가
+      height: 'auto',
+      headerToolbar: {
+        left: 'prevBtn,nextBtn todayBtn',
+        center: 'title',
+        right: 'doneBtn'
+      },
+      customButtons: {
+        prevBtn: {
+          text: '◁',
+          click() { calendar.prev(); }
+        },
+        nextBtn: {
+          text: '▷',
+          click() { calendar.next(); }
+        },
+        todayBtn: {
+          text: '📍 이번달',
+          click() { calendar.today(); }
+        },
+        doneBtn: {
+          text: '📈 월간실적',
+          click() { location.href = 'done.html'; }
+        }
+      },
+      titleFormat: { year: 'numeric', month: 'long' },
+      dayCellContent: (args) => {
+        return { html: args.date.getDate().toString() }; // (3) 날짜만 숫자로 출력
+      },
+      events: await loadEvents(),
+      eventClick: info => {
+        if (confirm('이 일정을 수정하시겠습니까?')) {
+          window.location.href = `edit.html?id=${info.event.extendedProps.id}`;
+        }
+      },
+      dateClick: info => openModal(info.dateStr)
+    });
+
+    calendar.render();
+
+    document.getElementById('showDone').addEventListener('change', async () => {
+      const events = await loadEvents();
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+    });
+  });
+</script>
+
+
+
+
 </body>
 </html>

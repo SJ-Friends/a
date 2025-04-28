@@ -117,95 +117,116 @@
   <div id='calendar'></div>
   <div id='legend'></div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-    );
+<script>
+  const supabase = window.supabase.createClient(
+    'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+  );
 
-    function formatCost(value) {
-      const num = parseInt(value, 10);
-      return isNaN(num) ? '0원' : num.toLocaleString() + '원';
-    }
+  function formatCost(value) {
+    const num = parseInt(value, 10);
+    return isNaN(num) ? '0원' : num.toLocaleString() + '원';
+  }
 
-    function getColorMap(offices) {
-      const palette = ['#e9fdc8', '#c4f2dc', '#fddd85', '#f9cccc', '#bbcbf6', '#d9eaff', '#ffd8c2'];
-      const colorMap = {};
-      offices.forEach((office, i) => {
-        colorMap[office] = palette[i % palette.length];
-      });
-      return colorMap;
-    }
-
-    async function loadEvents() {
-      const { data, error } = await supabase.from('sche').select('*').not('res_d', 'is', null);
-      if (error) {
-        alert('예약 일정 불러오기 실패');
-        return [];
-      }
-
-      const uniqueOffices = [...new Set(data.map(item => item.office || '기타'))];
-      const colorMap = getColorMap(uniqueOffices);
-
-      const legend = document.getElementById('legend');
-      legend.innerHTML = '<strong>체험단별 색상:</strong><br>' + uniqueOffices.map(office => {
-        const color = colorMap[office];
-        return `
-          <span class="legend-item">
-            <span class="legend-color" style="background:${color}"></span>${office}
-          </span>`;
-      }).join('');
-
-      return data.map(item => {
-        const content = `${item.title || '업체명 없음'} (${item.loca || '-'})\n${formatCost(item.cost)} ${item.res_t || '-'} ${item.res_p || '-'}명`;
-        const color = colorMap[item.office || '기타'];
-
-        const isConfirmed = item.res_c === true;
-
-        return {
-          id: item.id,
-          title: content,
-          start: item.res_d,
-          backgroundColor: color,
-          borderColor: color,
-          textColor: isConfirmed ? '#000' : '#888',
-          display: 'block',
-          classNames: isConfirmed ? [] : ['fc-gray-italic']
-        };
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth',
-        locale: 'ko',
-        height: 'auto',
-        headerToolbar: {
-          left: 'prev,next todayBtn',
-          center: 'title',
-          right: ''
-        },
-        customButtons: {
-          todayBtn: {
-            text: '📍 이번달',
-            click() { calendar.today(); }
-          }
-        },
-        titleFormat: { year: 'numeric', month: 'long' },
-        events: await loadEvents(),
-        eventClick(info) {
-          if (confirm('예약 일정을 수정하시겠습니까?')) {
-            window.location.href = `edit.html?id=${info.event.id}`;
-          }
-        },
-        eventDidMount(info) {
-          const el = info.el.querySelector('.fc-event-title');
-          if (el) el.innerHTML = info.event.title.replace(/\n/g, '<br>');
-        }
-      });
-
-      calendar.render();
+  function getColorMap(offices) {
+    const palette = ['#e9fdc8', '#c4f2dc', '#fddd85', '#f9cccc', '#bbcbf6', '#d9eaff', '#ffd8c2'];
+    const colorMap = {};
+    offices.forEach((office, i) => {
+      colorMap[office] = palette[i % palette.length];
     });
-  </script>
+    return colorMap;
+  }
+
+  async function loadEvents() {
+    const { data, error } = await supabase.from('sche').select('*').not('res_d', 'is', null);
+    if (error) {
+      alert('예약 일정 불러오기 실패');
+      return [];
+    }
+
+    const uniqueOffices = [...new Set(data.map(item => item.office || '기타'))];
+    const colorMap = getColorMap(uniqueOffices);
+
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '<strong>체험단별 색상:</strong><br>' + uniqueOffices.map(office => {
+      const color = colorMap[office];
+      return `
+        <span class="legend-item">
+          <span class="legend-color" style="background:${color}"></span>${office}
+        </span>`;
+    }).join('');
+
+    return data.map(item => {
+      const content = `${item.title || '업체명 없음'} (${item.loca || '-'})\n${formatCost(item.cost)} ${item.res_t || '-'} ${item.res_p || '-'}명`;
+      const color = colorMap[item.office || '기타'];
+      const isConfirmed = item.res_c === true;
+
+      return {
+        id: item.id,
+        title: content,
+        start: item.res_d,
+        backgroundColor: color,
+        borderColor: color,
+        textColor: isConfirmed ? '#000' : '#888',
+        display: 'block',
+        classNames: isConfirmed ? [] : ['fc-gray-italic']
+      };
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+      initialView: 'dayGridMonth',
+      locale: 'ko',
+      firstDay: 1, // 월요일 시작
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next todayBtn',
+        center: 'title',
+        right: ''
+      },
+      customButtons: {
+        todayBtn: {
+          text: '📍 이번달',
+          async click() {
+            calendar.today();
+            const events = await loadEvents();
+            calendar.removeAllEvents();
+            calendar.addEventSource(events);
+          }
+        }
+      },
+      titleFormat: { year: 'numeric', month: 'long' },
+      dayCellContent: (args) => {
+        return { html: args.date.getDate().toString() };
+      },
+      events: await loadEvents(),
+      eventClick(info) {
+        if (confirm('예약 일정을 수정하시겠습니까?')) {
+          window.location.href = `edit.html?id=${info.event.id}`;
+        }
+      },
+      eventDidMount(info) {
+        const el = info.el.querySelector('.fc-event-title');
+        if (el) el.innerHTML = info.event.title.replace(/\n/g, '<br>');
+      }
+    });
+
+    calendar.render();
+
+    document.querySelector('.fc-prev-button').addEventListener('click', async () => {
+      const events = await loadEvents();
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+    });
+
+    document.querySelector('.fc-next-button').addEventListener('click', async () => {
+      const events = await loadEvents();
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+    });
+  });
+</script>
+
 </body>
 </html>
