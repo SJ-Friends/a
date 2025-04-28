@@ -20,21 +20,35 @@
       max-width: 1000px;
       margin: auto;
     }
-    .item {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #f2f2f2;
     }
     .fail {
       color: red;
+    }
+    .naver-link {
+      color: #0077cc;
+      text-decoration: underline;
+      font-size: 12px;
     }
   </style>
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼!</h2>
+  <h2 style="text-align:center;">일상을 여행처럼</h2>
 
-  <!-- 필터바 -->
   <div class="filter-bar">
     <label><input type="checkbox" id="showDone"> 완료 포함</label>
     <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
@@ -42,12 +56,32 @@
 
   <div id="map"></div>
 
-  <!-- 데이터 목록 -->
   <div id="list">
     <h3>📝 데이터 목록</h3>
-    <div id="success-list"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>상호명</th>
+          <th>지역</th>
+          <th>상태</th>
+          <th>네이버 검색</th>
+        </tr>
+      </thead>
+      <tbody id="success-list"></tbody>
+    </table>
+
     <h3>❗ 검색 실패 목록</h3>
-    <div id="fail-list"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>상호명</th>
+          <th>지역</th>
+          <th>상태</th>
+          <th>네이버 검색</th>
+        </tr>
+      </thead>
+      <tbody id="fail-list"></tbody>
+    </table>
   </div>
 
   <script>
@@ -122,28 +156,45 @@
               openInfoWindow = infoWindow;
             });
 
-            // 목록 추가 (성공)
-            const successList = document.getElementById('success-list');
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.innerHTML = `<a href="edit.html?id=${item.id}" target="_blank">${item.title} (${item.loca})</a>`;
-            successList.appendChild(div);
-
             bounds.extend(coords);
             map.setBounds(bounds);
+
+            // 목록 추가 (성공)
+            const successList = document.getElementById('success-list');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
+              <td>${item.loca}</td>
+              <td>✅ 성공</td>
+              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+            `;
+            successList.appendChild(tr);
+
           } else {
             console.warn('검색 실패:', keyword);
 
             // 목록 추가 (실패)
             const failList = document.getElementById('fail-list');
-            const div = document.createElement('div');
-            div.className = 'item fail';
-            div.textContent = `${item.title} (${item.loca}) - 검색 실패`;
-            failList.appendChild(div);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="fail">${item.title}</td>
+              <td class="fail">${item.loca}</td>
+              <td class="fail">❌ 실패</td>
+              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+            `;
+            failList.appendChild(tr);
           }
         });
       }
     }
+
+    // 지도 클릭 시 인포윈도우 닫기
+    kakao.maps.event.addListener(map, 'click', function() {
+      if (openInfoWindow) {
+        openInfoWindow.close();
+        openInfoWindow = null;
+      }
+    });
 
     // 필터 변경시 새로 로드
     document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
