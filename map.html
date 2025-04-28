@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>일상을 여행처럼!</title>
+  <title>일상을 여행처럼</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     #map { width: 100%; height: 90vh; }
@@ -20,9 +20,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼!</h2>
+  <h2 style="text-align:center;">일상을 여행처럼</h2>
 
-  <!-- 필터 바 추가 -->
+  <!-- 필터바 -->
   <div class="filter-bar">
     <label><input type="checkbox" id="showDone"> 완료 포함</label>
     <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
@@ -31,6 +31,7 @@
   <div id="map"></div>
 
   <script>
+    // Supabase 연결
     const supabase = window.supabase.createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
@@ -38,17 +39,20 @@
 
     const mapContainer = document.getElementById('map');
     const mapOption = {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
+      center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울
       level: 5
     };
-
     const map = new kakao.maps.Map(mapContainer, mapOption);
     const places = new kakao.maps.services.Places();
-    const bounds = new kakao.maps.LatLngBounds();
+    let markers = []; // 마커 저장
+    let openInfoWindow = null; // 현재 열려있는 인포윈도우
 
-    let openInfoWindow = null; // 현재 열려있는 인포윈도우 저장용
-
+    // 마커 불러오기
     async function loadAndDisplayMarkers() {
+      // 기존 마커 제거
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+
       const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
       if (error) {
         alert('DB 데이터 불러오기 실패!');
@@ -59,12 +63,13 @@
       const showDone = document.getElementById('showDone').checked;
       const showRes = document.getElementById('showRes').checked;
 
-      // 필터 적용
       const filtered = data.filter(item => {
         const doneOk = showDone || item.done !== true;
         const resOk = showRes ? true : item.res_c === true;
         return doneOk && resOk;
       });
+
+      const bounds = new kakao.maps.LatLngBounds();
 
       for (const item of filtered) {
         const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
@@ -79,6 +84,8 @@
               position: coords,
               title: item.title
             });
+
+            markers.push(marker); // 마커 저장
 
             const infoWindow = new kakao.maps.InfoWindow({
               content: `<div style="padding:5px;font-size:14px;">
@@ -103,21 +110,12 @@
       }
     }
 
-    // 최초 실행
+    // 필터 체크박스 바뀔 때 마커만 새로고침
+    document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
+    document.getElementById('showRes').addEventListener('change', loadAndDisplayMarkers);
+
+    // 처음 로딩
     loadAndDisplayMarkers();
-
-    // 필터 체크박스 바뀔 때 다시 로드
-    document.getElementById('showDone').addEventListener('change', () => {
-      resetMap();
-    });
-    document.getElementById('showRes').addEventListener('change', () => {
-      resetMap();
-    });
-
-    function resetMap() {
-      mapContainer.innerHTML = ""; // 지도 리셋
-      location.reload(); // 전체 새로고침 (간단하고 안전하게)
-    }
   </script>
 </body>
 </html>
