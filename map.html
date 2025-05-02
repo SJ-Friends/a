@@ -100,7 +100,6 @@
     let openInfoWindow = null;
 
     async function loadAndDisplayMarkers() {
-      // 기존 마커 제거
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
@@ -117,82 +116,84 @@
       const showDone = document.getElementById('showDone').checked;
       const showRes = document.getElementById('showRes').checked;
 
-
-const filtered = data.filter(item => {
-  const doneOk = showDone || item.done !== true;
-  const resOk = showRes || item.res_c === true;
-  return doneOk && resOk;
-});
-
-
-      
+      const filtered = data.filter(item => {
+        const doneOk = showDone || item.done !== true;
+        const resOk = showRes || item.res_c === true;
+        return doneOk && resOk;
+      });
 
       const places = new kakao.maps.services.Places();
       const bounds = new kakao.maps.LatLngBounds();
 
       for (const item of filtered) {
-        const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
-        if (!keyword) continue;
+        const keywordFull = `${item.title || ''} ${item.loca || ''}`.trim();
+        const keywordTitleOnly = `${item.title || ''}`.trim();
 
-        places.keywordSearch(keyword, function(result, status) {
-          if (status === kakao.maps.services.Status.OK) {
-            const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+        function searchPlace(keyword, isRetry = false) {
+          places.keywordSearch(keyword, function(result, status) {
+            if (status === kakao.maps.services.Status.OK) {
+              const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
 
-            const marker = new kakao.maps.Marker({
-              map: map,
-              position: coords,
-              title: item.title
-            });
+              const marker = new kakao.maps.Marker({
+                map: map,
+                position: coords,
+                title: item.title
+              });
 
-            markers.push(marker);
+              markers.push(marker);
 
-            const infoWindow = new kakao.maps.InfoWindow({
-              content: `<div style="padding:5px;font-size:14px;">
-                          <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
-                            <b>${item.title}</b><br>${item.loca}
-                          </a>
-                        </div>`
-            });
+              const infoWindow = new kakao.maps.InfoWindow({
+                content: `<div style="padding:5px;font-size:14px;">
+                            <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
+                              <b>${item.title}</b><br>${item.loca}
+                            </a>
+                          </div>`
+              });
 
-            kakao.maps.event.addListener(marker, 'click', function() {
-              if (openInfoWindow) openInfoWindow.close();
-              infoWindow.open(map, marker);
-              openInfoWindow = infoWindow;
-            });
+              kakao.maps.event.addListener(marker, 'click', function() {
+                if (openInfoWindow) openInfoWindow.close();
+                infoWindow.open(map, marker);
+                openInfoWindow = infoWindow;
+              });
 
-            bounds.extend(coords);
-            map.setBounds(bounds);
+              bounds.extend(coords);
+              map.setBounds(bounds);
 
-            // 목록 추가 (성공)
-            const successList = document.getElementById('success-list');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
-              <td>${item.loca}</td>
-              <td>✅ 성공</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-            `;
-            successList.appendChild(tr);
+              const successList = document.getElementById('success-list');
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
+                <td>${item.loca}</td>
+                <td>✅ 성공</td>
+                <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+              `;
+              successList.appendChild(tr);
+            } else {
+              if (!isRetry && keyword !== keywordTitleOnly) {
+                // ⭐ 추가: 첫 시도 실패 → loca 생략하고 title로 재시도
+                console.warn(`1차 검색 실패: ${keyword}, 재시도: ${keywordTitleOnly}`);
+                searchPlace(keywordTitleOnly, true);
+              } else {
+                console.warn('검색 실패 최종:', keyword);
 
-          } else {
-            console.warn('검색 실패:', keyword);
+                const failList = document.getElementById('fail-list');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td class="fail">${item.title}</td>
+                  <td class="fail">${item.loca}</td>
+                  <td class="fail">❌ 실패</td>
+                  <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+                `;
+                failList.appendChild(tr);
+              }
+            }
+          });
+        }
 
-            // 목록 추가 (실패)
-            const failList = document.getElementById('fail-list');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td class="fail">${item.title}</td>
-              <td class="fail">${item.loca}</td>
-              <td class="fail">❌ 실패</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-            `;
-            failList.appendChild(tr);
-          }
-        });
+        searchPlace(keywordFull);  // 첫 검색 시도
       }
     }
 
-    // 지도 클릭 시 인포윈도우 닫기
     kakao.maps.event.addListener(map, 'click', function() {
       if (openInfoWindow) {
         openInfoWindow.close();
@@ -200,11 +201,9 @@ const filtered = data.filter(item => {
       }
     });
 
-    // 필터 변경시 새로 로드
     document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
     document.getElementById('showRes').addEventListener('change', loadAndDisplayMarkers);
 
-    // 첫 로딩
     loadAndDisplayMarkers();
   </script>
 </body>
