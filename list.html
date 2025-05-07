@@ -11,8 +11,7 @@
     th:nth-child(5), td:nth-child(5) { min-width: 80px; }
     th:nth-child(8), td:nth-child(8) { min-width: 120px; }
     th:nth-child(9), td:nth-child(9) { min-width: 90px; }
-    th:nth-child(10), td:nth-child(10),
-    th:nth-child(11), td:nth-child(11) { min-width: 70px; }
+    th:nth-child(10), td:nth-child(10) { min-width: 70px; }
 
     body { font-family: 'Segoe UI', sans-serif; padding: 30px; max-width: 1000px; margin: auto; }
     .header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
@@ -76,7 +75,7 @@
         <th>종료일</th>
         <th>불가능 요일</th>
         <th>체험단</th>
-        <th>메모</th>
+        <th>AI</th> <!-- ✅ 메모 대신 AI문장 -->
         <th>삭제</th>
       </tr>
     </thead>
@@ -133,7 +132,7 @@
           <td>${formatShortDate(item.date_e)}</td>
           <td>${unavailable}</td>
           <td>${item.office || ''}</td>
-          <td class="tooltip" title="${item.memo || ''}">💬</td>
+          <td><button onclick="location.href='goai.html?id=${item.id}'">AI</button></td> <!-- ✅ 메모 대신 버튼 -->
           <td><button onclick="deleteSchedule(${item.id})">삭제</button></td>
         `;
 

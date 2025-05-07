@@ -2,41 +2,294 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>ChatGPT 웹 테스트</title>
+  <title>프롬프트 작성기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 30px auto; }
-    textarea { width: 100%; height: 100px; margin-bottom: 10px; }
-    button { padding: 10px 20px; font-size: 16px; }
-    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 1.5em;
+    }
+    .field {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .value-box {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    button {
+      padding: 6px 12px;
+      background: #1d72b8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover {
+      background: #135a96;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
-  <h1>ChatGPT 웹 테스트</h1>
-  <textarea id="prompt" placeholder="여기에 물어볼 내용을 입력하세요..."></textarea><br>
-  <button onclick="sendPrompt()">GPT에 보내기</button>
-  <h2>응답</h2>
-  <pre id="response"></pre>
+  <h1>프롬프트 작성기</h1>
 
-  <script>
-    async function sendPrompt() {
-      const prompt = document.getElementById('prompt').value;
-      const apiKey = "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"; // 🔥 API 키 입력하세요!
+  <!-- 위치 -->
+  <div class="field">
+    <label>위치</label>
+    <div class="value-box">
+      <span id="locaText">로딩중...</span>
+      <div>
+        <button onclick="addToSentence('loca')">추가</button>
+        <button onclick="removeFromSentence('loca')">제거</button>
+      </div>
+    </div>
+  </div>
 
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+  <!-- 업체명 -->
+  <div class="field">
+    <label>업체명</label>
+    <div class="value-box">
+      <span id="titleText">로딩중...</span>
+      <div>
+        <button onclick="addToSentence('title')">추가</button>
+        <button onclick="removeFromSentence('title')">제거</button>
+      </div>
+    </div>
+  </div>
 
-      const data = await res.json();
-      document.getElementById('response').textContent = data.choices?.[0]?.message?.content ?? '응답 없음';
+  <!-- 메모 -->
+  <div class="field">
+    <label>메모</label>
+    <div class="value-box">
+      <span id="memoText">로딩중...</span>
+      <div>
+        <button onclick="addToSentence('memo')">추가</button>
+        <button onclick="removeFromSentence('memo')">제거</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스타일 선택 -->
+  <div class="field">
+    <label>스타일 선택</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" class="styleCheckbox" value="친근하게">친근하게</label>
+      <label><input type="checkbox" class="styleCheckbox" value="재미있게">재미있게</label>
+      <label><input type="checkbox" class="styleCheckbox" value="젊은감성으로">젊은감성으로</label>
+      <label><input type="checkbox" class="styleCheckbox" value="재치있게">재치있게</label>
+      <label><input type="checkbox" class="styleCheckbox" value="자세히">자세히</label>
+      <label><input type="checkbox" class="styleCheckbox" value="정확한정보만">정확한정보만</label>
+    </div>
+  </div>
+
+  <!-- 추가 문장 -->
+  <div class="field">
+    <label>추가 문장</label>
+    <input type="text" id="customSentence">
+    <div class="btn-group">
+      <button onclick="addCustomToSentence()">추가</button>
+      <button onclick="removeCustomFromSentence()">제거</button>
+      <button onclick="saveCustomSentence()">저장</button>
+    </div>
+  </div>
+
+  <!-- 완성된 문장 -->
+  <div class="field">
+    <label>완성된 문장</label>
+    <textarea id="finalSentence" rows="15"></textarea>
+    <div class="btn-group">
+      <button onclick="clearSentence()">지우기</button>
+      <button onclick="copySentence()">복사</button>
+    </div>
+  </div>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+);
+
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get("id");
+const dataFields = { title: '', loca: '', memo: '' };
+
+async function loadData() {
+  const { data, error } = await supabase.from('sche').select('*').eq('id', id).single();
+  if (error || !data) {
+    alert('데이터 로드 실패');
+    return;
+  }
+  dataFields.title = data.title || '';
+  dataFields.loca = data.loca || '';
+  dataFields.memo = data.memo || '';
+
+  document.getElementById('titleText').textContent = dataFields.title;
+  document.getElementById('locaText').textContent = dataFields.loca;
+  document.getElementById('memoText').textContent = dataFields.memo;
+}
+
+function addToSentence(field) {
+  const textarea = document.getElementById('finalSentence');
+  let value = dataFields[field];
+  if (field === 'loca') value += '에 있는';
+  if (field === 'title') value += '에 대한 블로그를 작성해줘\n\n';  // ⭐️ 수정된 줄바꿈
+  if (field === 'memo') value += '\n\n';  // ⭐️ 메모 뒤 두줄 띄움
+  if (!textarea.value.includes(value)) {
+    textarea.value += (textarea.value ? ' ' : '') + value;
+  }
+}
+
+function removeFromSentence(field) {
+  const textarea = document.getElementById('finalSentence');
+  let value = dataFields[field];
+  if (field === 'loca') value += '에 있는';
+  if (field === 'title') value += '에 대한 블로그를 작성해줘\n\n';
+  if (field === 'memo') value += '\n\n';
+  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(escaped, 'g');
+  textarea.value = textarea.value.replace(regex, '').replace(/\s+/g, ' ').trim();
+}
+
+const checkboxes = document.querySelectorAll('.styleCheckbox');
+checkboxes.forEach(cb => {
+  cb.addEventListener('change', () => {
+    const styles = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+    const styleText = styles.length > 0 ? ` [스타일: ${styles.join(', ')}]` : '';
+    const base = textareaWithoutStyle();
+    document.getElementById('finalSentence').value = base + styleText;
+  });
+});
+
+function textareaWithoutStyle() {
+  return document.getElementById('finalSentence').value.split(' [스타일:')[0].trim();
+}
+
+function addCustomToSentence() {
+  const customText = document.getElementById('customSentence').value.trim();
+  if (!customText) return;
+  const textarea = document.getElementById('finalSentence');
+  if (!textarea.value.includes(customText)) {
+    textarea.value += (textarea.value ? ' ' : '') + customText;
+  }
+}
+
+function removeCustomFromSentence() {
+  const customText = document.getElementById('customSentence').value.trim();
+  const escaped = customText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(escaped, 'g');
+  const textarea = document.getElementById('finalSentence');
+  textarea.value = textarea.value.replace(regex, '').replace(/\s+/g, ' ').trim();
+}
+
+async function loadData() {
+  const { data, error } = await supabase.from('sche').select('*').eq('id', id).single();
+  if (error || !data) {
+    alert('sche 테이블 로드 실패');
+    return;
+  }
+  dataFields.title = data.title || '';
+  dataFields.loca = data.loca || '';
+  dataFields.memo = data.memo || '';
+
+  document.getElementById('titleText').textContent = dataFields.title;
+  document.getElementById('locaText').textContent = dataFields.loca;
+  document.getElementById('memoText').textContent = dataFields.memo;
+
+  // ⭐️ txt 테이블에서 ai1 가져오기
+  const { data: txtData, error: txtError } = await supabase.from('txt').select('ai1').eq('id', id).single();
+  if (txtError) {
+    console.error('txt 테이블 로드 실패:', txtError);
+  } else if (txtData && txtData.ai1) {
+    document.getElementById('customSentence').value = txtData.ai1; // ⭐️ 저장된 ai1 값 표시
+  }
+}
+
+async function saveCustomSentence() {
+  const customText = document.getElementById('customSentence').value.trim();
+  if (!customText) {
+    alert('문장을 입력해주세요');
+    return;
+  }
+  try {
+    const { data: exists } = await supabase.from('txt').select('id').eq('id', id).single();
+    let result;
+    if (exists) {
+      result = await supabase.from('txt').update({ ai1: customText }).eq('id', id);
+    } else {
+      result = await supabase.from('txt').insert({ id: id, ai1: customText });
     }
-  </script>
+
+    const { error } = result;
+    if (error) {
+      console.error('저장 에러:', error);
+      alert('저장 실패: ' + (error.details || error.message || JSON.stringify(error)));
+    } else {
+      alert('저장 완료!');
+      // ⭐️ 저장 후 input에 저장된 내용 유지 (이미 값 유지되므로 별도 처리 불필요)
+    }
+  } catch (e) {
+    console.error(e);
+    alert('저장 중 오류 발생');
+  }
+}
+
+
+function clearSentence() {
+  document.getElementById('finalSentence').value = '';
+}
+
+function copySentence() {
+  const textarea = document.getElementById('finalSentence');
+  textarea.select();
+  document.execCommand('copy');
+  alert('복사 완료!');
+}
+
+loadData();
+</script>
+
+
 </body>
 </html>
