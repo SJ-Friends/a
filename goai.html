@@ -55,17 +55,18 @@
     </div>
   </div>
 
-  <!-- 메모 -->
-  <div class="field">
-    <label>메모</label>
-    <div class="btn-group">
-      <input type="text" id="memoInput"/>
-      <button onclick="addToSentence('memo')">추가</button>
-      <button onclick="removeFromSentence('memo')">제거</button>
-    </div>
-  </div>
 
-  <!-- 스타일 선택 -->
+  <div class="field">
+  <label>주문</label>
+  <div class="btn-group">
+    <input type="text" id="orderInput" value=""/>
+    <button onclick="addToSentence('order')">추가</button>
+    <button onclick="removeFromSentence('order')">제거</button>
+  </div>
+</div>
+
+  
+    <!-- 스타일 선택 -->
   <div class="field">
     <label>스타일 선택</label>
     <div class="checkbox-group">
@@ -118,7 +119,7 @@ async function loadData() {
   if (error || !data) { alert('데이터 로드 실패'); return; }
   document.getElementById('titleInput').value = data.title || '';
   document.getElementById('locaInput').value = data.loca || '';
-  document.getElementById('memoInput').value = data.memo || '';
+  document.getElementById('orderInput').value = '';  // 주문은 항상 공란으로 시작
   document.getElementById('kwordInput').value = data.kword || '';
 
   const { data: txtData, error: txtError } = await supabase
@@ -137,7 +138,7 @@ function addToSentence(field) {
   let value = '';
   if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n\n';
   else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는';
-  else if (field === 'memo') value = document.getElementById('memoInput').value + '\n\n';
+  else if (field === 'order') value = '\n주문한 메뉴 : ' + document.getElementById('orderInput').value;
   else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value;
   if (!textarea.value.includes(value)) textarea.value += (textarea.value ? ' ' : '') + value;
 }
@@ -147,7 +148,7 @@ function removeFromSentence(field) {
   let value = '';
   if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n\n';
   else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는';
-  else if (field === 'memo') value = document.getElementById('memoInput').value + '\n\n';
+  else if (field === 'order') value = '\n주문한 메뉴 : ' + document.getElementById('orderInput').value;
   else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value;
   const escaped = value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
   textarea.value = textarea.value.replace(new RegExp(escaped, 'g'), '').replace(/\s+/g, ' ').trim();
