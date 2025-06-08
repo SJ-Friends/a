@@ -106,101 +106,79 @@
   </div>
 
 <script>
-const supabase = window.supabase.createClient(
-  'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-);
+function sanitizeSentence(text) {
+  // 줄바꿈 모두 제거
+  return text.replace(/\n/g, '').trim();
+}
 
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get("id");
+function updateSentence(content) {
+  const sentenceArea = document.getElementById("finalSentence");
+  let current = sanitizeSentence(sentenceArea.value);
+  sentenceArea.value = (current + content).trim() + '\n';
+}
 
-async function loadData() {
-  const { data, error } = await supabase.from('sche').select('*').eq('id', id).single();
-  if (error || !data) { alert('데이터 로드 실패'); return; }
-  document.getElementById('titleInput').value = data.title || '';
-  document.getElementById('locaInput').value = data.loca || '';
-  document.getElementById('orderInput').value = '';  // 주문은 항상 공란으로 시작
-  document.getElementById('kwordInput').value = data.kword || '';
+function addToSentence(type) {
+  let value = "";
+  if (type === "loca") value = document.getElementById("locaInput").value.trim();
+  if (type === "title") value = document.getElementById("titleInput").value.trim();
+  if (type === "kword") value = document.getElementById("kwordInput").value.trim();
+  if (type === "order") value = document.getElementById("orderInput").value.trim();
+  if (!value) return;
 
-  const { data: txtData, error: txtError } = await supabase
-    .from('txt')
-    .select('ai1')
-    .order('id', { ascending: false })
-    .limit(1);
+  let content = "";
+  if (type === "order") content = `주문한 메뉴 : ${value}`;
+  else if (type === "loca") content = `위치는 ${value}`;
+  else if (type === "title") content = `업체명은 ${value}`;
+  else if (type === "kword") content = `키워드는 ${value}`;
+  
+  updateSentence(content);
+}
 
-  if (!txtError && txtData && txtData.length > 0 && txtData[0].ai1) {
-    document.getElementById('customSentence').value = txtData[0].ai1;
+function removeFromSentence(type) {
+  const sentenceArea = document.getElementById("finalSentence");
+  let current = sanitizeSentence(sentenceArea.value);
+
+  let target = "";
+  if (type === "order") target = "주문한 메뉴 :";
+  else if (type === "loca") target = "위치는";
+  else if (type === "title") target = "업체명은";
+  else if (type === "kword") target = "키워드는";
+
+  if (target) {
+    current = current.replace(new RegExp(target + ".*?(?=위치는|업체명은|키워드는|주문한 메뉴 :|$)"), '');
+    sentenceArea.value = current.trim() + '\n';
   }
 }
 
-function addToSentence(field) {
-  const textarea = document.getElementById('finalSentence');
-  let value = '';
-  if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n\n';
-  else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는';
-  else if (field === 'order') value = '\n주문한 메뉴 : ' + document.getElementById('orderInput').value;
-  else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value;
-  if (!textarea.value.includes(value)) textarea.value += (textarea.value ? ' ' : '') + value;
-}
-
-function removeFromSentence(field) {
-  const textarea = document.getElementById('finalSentence');
-  let value = '';
-  if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n';
-  else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는';
-  else if (field === 'order') value = '주문한 메뉴 : ' + document.getElementById('orderInput').value + '\n';
-  else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value + '\n';
-  const escaped = value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
-  textarea.value = textarea.value.replace(new RegExp(escaped, 'g'), '').replace(/\s+/g, ' ').trim();
-}
-
-const checkboxes = document.querySelectorAll('.styleCheckbox');
-checkboxes.forEach(cb => cb.addEventListener('change', () => {
-  const styles = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
-  const styleText = styles.length ? ` [스타일: ${styles.join(', ')}]` : '';
-  const base = document.getElementById('finalSentence').value.split(' [스타일:')[0].trim();
-  document.getElementById('finalSentence').value + '\n' = base + styleText;
-}));
-
 function addCustomToSentence() {
-  const customText = document.getElementById('customSentence').value.trim();
-  if (!customText) return;
-  const textarea = document.getElementById('finalSentence');
-  if (!textarea.value.includes(customText)) textarea.value += (textarea.value ? ' ' : '') + customText;
+  const value = document.getElementById("customSentence").value.trim();
+  if (value) updateSentence(value);
 }
 
 function removeCustomFromSentence() {
-  const customText = document.getElementById('customSentence').value.trim();
-  const escaped = customText.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
-  document.getElementById('finalSentence').value = document.getElementById('finalSentence').value.replace(new RegExp(escaped, 'g'), '').replace(/\s+/g, ' ').trim();
-}
-
-async function saveCustomSentence() {
-  const customText = document.getElementById('customSentence').value.trim();
-  if (!customText) { alert('문장을 입력해주세요'); return; }
-  try {
-    const { data: exists } = await supabase.from('txt').select('id').eq('id', id).single();
-    let result;  if (exists) result = await supabase.from('txt').update({ ai1: customText }).eq('id', id);  else result = await supabase.from('txt').insert({ id: id, ai1: customText });
-    if (result.error) alert('저장 실패: ' + (result.error.details || result.error.message));
-    else alert('저장 완료!');
-  } catch (e) {
-    alert('저장 중 오류 발생');
-  }
+  const value = document.getElementById("customSentence").value.trim();
+  const sentenceArea = document.getElementById("finalSentence");
+  let current = sanitizeSentence(sentenceArea.value);
+  sentenceArea.value = current.replace(value, '').trim() + '\n';
 }
 
 function clearSentence() {
-  document.getElementById('finalSentence').value = ''; 
+  document.getElementById("finalSentence").value = '';
 }
 
 function copySentence() {
-  const textarea = document.getElementById('finalSentence');
-  textarea.select();
-  document.execCommand('copy');
-  alert('복사 완료!');
+  const sentence = document.getElementById("finalSentence");
+  sentence.select();
+  document.execCommand("copy");
+  alert("문장이 복사되었습니다.");
 }
 
-loadData();
+function saveCustomSentence() {
+  const value = document.getElementById("customSentence").value.trim();
+  if (value) updateSentence(value);
+}
 </script>
+
 
 </body>
 </html>
