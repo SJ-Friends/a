@@ -146,10 +146,10 @@ function addToSentence(field) {
 function removeFromSentence(field) {
   const textarea = document.getElementById('finalSentence');
   let value = '';
-  if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n\n';
+  if (field === 'title') value = document.getElementById('titleInput').value + '에 대한 블로그를 작성해줘\n';
   else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는';
-  else if (field === 'order') value = '\n주문한 메뉴 : ' + document.getElementById('orderInput').value;
-  else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value;
+  else if (field === 'order') value = '주문한 메뉴 : ' + document.getElementById('orderInput').value + '\n';
+  else if (field === 'kword') value = '키워드는 : ' + document.getElementById('kwordInput').value + '\n';
   const escaped = value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
   textarea.value = textarea.value.replace(new RegExp(escaped, 'g'), '').replace(/\s+/g, ' ').trim();
 }
@@ -159,7 +159,7 @@ checkboxes.forEach(cb => cb.addEventListener('change', () => {
   const styles = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
   const styleText = styles.length ? ` [스타일: ${styles.join(', ')}]` : '';
   const base = document.getElementById('finalSentence').value.split(' [스타일:')[0].trim();
-  document.getElementById('finalSentence').value = base + styleText;
+  document.getElementById('finalSentence').value + '\n' = base + styleText;
 }));
 
 function addCustomToSentence() {
