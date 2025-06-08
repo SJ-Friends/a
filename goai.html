@@ -1,184 +1,150 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <title>프롬프트 작성기</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <title>문장 생성기</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; padding: 40px; max-width: 600px; margin: auto; }
-    h1 { text-align: center; margin-bottom: 30px; font-size: 1.5em; }
-    .field { margin-bottom: 20px; }
-    label { font-weight: bold; display: block; margin-bottom: 5px; }
-    .btn-group { display: flex; gap: 5px; align-items: center; }
-    input[type="text"] { flex: 1; height: 36px; padding: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-    button { height: 36px; padding: 0 10px; background: #1d72b8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    button:hover { background: #135a96; }
-    /* 붉은 계열 버튼 스타일 */
-    .btn-red { background: #e74c3c; }
-    .btn-red:hover { background: #c0392b; }
-    textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
-    .checkbox-group label { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f4f4f4;
+    }
+    .section {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    input {
+      width: 300px;
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 1rem;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h1>프롬프트 작성기</h1>
+  <h1>문장 생성기</h1>
 
-  <!-- 위치 -->
-  <div class="field">
-    <label>위치</label>
-    <div class="btn-group">
-      <input type="text" id="locaInput"/>
-      <button onclick="addToSentence('loca')">추가</button>
-      <button onclick="removeFromSentence('loca')">제거</button>
-    </div>
-  </div>
-
-  <!-- 업체명 -->
-  <div class="field">
+  <div class="section">
     <label>업체명</label>
-    <div class="btn-group">
-      <input type="text" id="titleInput"/>
-      <button onclick="addToSentence('title')">추가</button>
-      <button onclick="removeFromSentence('title')">제거</button>
-    </div>
+    <input type="text" id="titleInput" />
+    <button onclick="addToSentence('title')">추가</button>
+    <button onclick="removeFromSentence('title')">제거</button>
   </div>
 
-  <!-- 키워드 -->
-  <div class="field">
+  <div class="section">
+    <label>위치</label>
+    <input type="text" id="locaInput" />
+    <button onclick="addToSentence('loca')">추가</button>
+    <button onclick="removeFromSentence('loca')">제거</button>
+  </div>
+
+  <div class="section">
     <label>키워드</label>
-    <div class="btn-group">
-      <input type="text" id="kwordInput"/>
-      <button onclick="addToSentence('kword')">추가</button>
-      <button onclick="removeFromSentence('kword')">제거</button>
-    </div>
+    <input type="text" id="kwordInput" />
+    <button onclick="addToSentence('kword')">추가</button>
+    <button onclick="removeFromSentence('kword')">제거</button>
   </div>
 
-
-  <div class="field">
-  <label>주문</label>
-  <div class="btn-group">
-    <input type="text" id="orderInput" value=""/>
+  <div class="section">
+    <label>주문 메뉴</label>
+    <input type="text" id="orderInput" />
     <button onclick="addToSentence('order')">추가</button>
     <button onclick="removeFromSentence('order')">제거</button>
   </div>
-</div>
 
-  
-    <!-- 스타일 선택 -->
-  <div class="field">
-    <label>스타일 선택</label>
-    <div class="checkbox-group">
-      <label><input type="checkbox" class="styleCheckbox" value="친근하게"/>친근하게</label>
-      <label><input type="checkbox" class="styleCheckbox" value="재미있게"/>재미있게</label>
-      <label><input type="checkbox" class="styleCheckbox" value="젊은감성으로"/>젊은감성으로</label>
-      <label><input type="checkbox" class="styleCheckbox" value="재치있게"/>재치있게</label>
-      <label><input type="checkbox" class="styleCheckbox" value="자세히"/>자세히</label>
-      <label><input type="checkbox" class="styleCheckbox" value="정확한정보만"/>정확한정보만</label>
-    </div>
+  <div class="section">
+    <label>직접 입력</label>
+    <input type="text" id="customSentence" />
+    <button onclick="addCustomToSentence()">추가</button>
+    <button onclick="removeCustomFromSentence()">제거</button>
   </div>
 
-  <!-- 추가 문장 -->
-  <div class="field">
-    <label>추가 문장</label>
-    <div class="btn-group">
-      <input type="text" id="customSentence"/>
-      <button onclick="addCustomToSentence()">추가</button>
-      <button onclick="removeCustomFromSentence()">제거</button>
-      <button class="btn-red" onclick="saveCustomSentence()">저장</button>
-    </div>
+  <div class="section">
+    <label>생성된 문장</label>
+    <textarea id="finalSentence" readonly></textarea><br/>
+    <button onclick="copySentence()">복사</button>
+    <button onclick="clearSentence()">초기화</button>
   </div>
 
-  <!-- 완성된 문장 -->
-  <div class="field">
-    <label>완성된 문장</label>
-    <textarea id="finalSentence" rows="15"></textarea>
-    <div class="btn-group">
-      <button onclick="clearSentence()">지우기</button>
-      <button onclick="copySentence()">복사</button>
-    </div>
-  </div>
+  <script>
+    function sanitizeSentence(text) {
+      return text.replace(/\n/g, '').trim();
+    }
 
-  <!-- 리스트로 돌아가기 버튼 -->
-  <div class="field">
-    <button class="btn-red" onclick="window.location.href='list.html'">리스트로 돌아가기</button>
-  </div>
+    function updateSentence(content) {
+      const sentenceArea = document.getElementById("finalSentence");
+      let current = sanitizeSentence(sentenceArea.value);
+      sentenceArea.value = (current + content).trim() + '\n';
+    }
 
-<script>
-function sanitizeSentence(text) {
-  // 줄바꿈 모두 제거
-  return text.replace(/\n/g, '').trim();
-}
+    function addToSentence(type) {
+      let value = "";
+      if (type === "loca") value = document.getElementById("locaInput").value.trim();
+      if (type === "title") value = document.getElementById("titleInput").value.trim();
+      if (type === "kword") value = document.getElementById("kwordInput").value.trim();
+      if (type === "order") value = document.getElementById("orderInput").value.trim();
+      if (!value) return;
 
-function updateSentence(content) {
-  const sentenceArea = document.getElementById("finalSentence");
-  let current = sanitizeSentence(sentenceArea.value);
-  sentenceArea.value = (current + content).trim() + '\n';
-}
+      let content = "";
+      if (type === "order") content = `주문한 메뉴 : ${value}`;
+      else if (type === "loca") content = `위치는 ${value}`;
+      else if (type === "title") content = `업체명은 ${value}`;
+      else if (type === "kword") content = `키워드는 ${value}`;
 
-function addToSentence(type) {
-  let value = "";
-  if (type === "loca") value = document.getElementById("locaInput").value.trim();
-  if (type === "title") value = document.getElementById("titleInput").value.trim();
-  if (type === "kword") value = document.getElementById("kwordInput").value.trim();
-  if (type === "order") value = document.getElementById("orderInput").value.trim();
-  if (!value) return;
+      updateSentence(content);
+    }
 
-  let content = "";
-  if (type === "order") content = `주문한 메뉴 : ${value}`;
-  else if (type === "loca") content = `위치는 ${value}`;
-  else if (type === "title") content = `업체명은 ${value}`;
-  else if (type === "kword") content = `키워드는 ${value}`;
-  
-  updateSentence(content);
-}
+    function removeFromSentence(type) {
+      const sentenceArea = document.getElementById("finalSentence");
+      let current = sanitizeSentence(sentenceArea.value);
 
-function removeFromSentence(type) {
-  const sentenceArea = document.getElementById("finalSentence");
-  let current = sanitizeSentence(sentenceArea.value);
+      let target = "";
+      if (type === "order") target = "주문한 메뉴 :";
+      else if (type === "loca") target = "위치는";
+      else if (type === "title") target = "업체명은";
+      else if (type === "kword") target = "키워드는";
 
-  let target = "";
-  if (type === "order") target = "주문한 메뉴 :";
-  else if (type === "loca") target = "위치는";
-  else if (type === "title") target = "업체명은";
-  else if (type === "kword") target = "키워드는";
+      if (target) {
+        current = current.replace(new RegExp(target + ".*?(?=업체명은|위치는|키워드는|주문한 메뉴 :|$)"), '');
+        sentenceArea.value = current.trim() + '\n';
+      }
+    }
 
-  if (target) {
-    current = current.replace(new RegExp(target + ".*?(?=위치는|업체명은|키워드는|주문한 메뉴 :|$)"), '');
-    sentenceArea.value = current.trim() + '\n';
-  }
-}
+    function addCustomToSentence() {
+      const value = document.getElementById("customSentence").value.trim();
+      if (value) updateSentence(value);
+    }
 
-function addCustomToSentence() {
-  const value = document.getElementById("customSentence").value.trim();
-  if (value) updateSentence(value);
-}
+    function removeCustomFromSentence() {
+      const value = document.getElementById("customSentence").value.trim();
+      const sentenceArea = document.getElementById("finalSentence");
+      let current = sanitizeSentence(sentenceArea.value);
+      sentenceArea.value = current.replace(value, '').trim() + '\n';
+    }
 
-function removeCustomFromSentence() {
-  const value = document.getElementById("customSentence").value.trim();
-  const sentenceArea = document.getElementById("finalSentence");
-  let current = sanitizeSentence(sentenceArea.value);
-  sentenceArea.value = current.replace(value, '').trim() + '\n';
-}
+    function clearSentence() {
+      document.getElementById("finalSentence").value = '';
+    }
 
-function clearSentence() {
-  document.getElementById("finalSentence").value = '';
-}
-
-function copySentence() {
-  const sentence = document.getElementById("finalSentence");
-  sentence.select();
-  document.execCommand("copy");
-  alert("문장이 복사되었습니다.");
-}
-
-function saveCustomSentence() {
-  const value = document.getElementById("customSentence").value.trim();
-  if (value) updateSentence(value);
-}
-</script>
-
-
+    function copySentence() {
+      const sentence = document.getElementById("finalSentence");
+      sentence.select();
+      document.execCommand("copy");
+      alert("문장이 복사되었습니다.");
+    }
+  </script>
 </body>
 </html>
