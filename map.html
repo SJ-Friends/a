@@ -42,16 +42,10 @@
       text-decoration: underline;
       font-size: 12px;
     }
-    label {
-      user-select: none;
-    }
-    input[type="date"] {
-      font-size: 14px;
-      padding: 2px 6px;
-      margin-left: 6px;
-    }
+    label { user-select: none; }
+    input[type="date"] { font-size: 14px; padding: 2px 6px; margin-left: 6px; }
   </style>
-  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -102,190 +96,95 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
     );
 
-    const mapContainer = document.getElementById('map');
-    const mapOption = {
+    const map = new kakao.maps.Map(document.getElementById('map'), {
       center: new kakao.maps.LatLng(37.5665, 126.9780),
       level: 5
-    };
-    const map = new kakao.maps.Map(mapContainer, mapOption);
-    let markers = [];
-    let openInfoWindow = null;
+    });
+    let markers = [], openInfoWindow = null;
 
-    // 날짜 달력 초기값 오늘로 세팅
+    // 초기 날짜 설정
     const possibleDateInput = document.getElementById('possibleDate');
     possibleDateInput.value = new Date().toISOString().slice(0,10);
 
-    // 방문가능만 체크박스, showDone, showRes 요소
     const showPossibleOnly = document.getElementById('showPossibleOnly');
     const showDone = document.getElementById('showDone');
     const showRes = document.getElementById('showRes');
 
-    // 예시: item에 방문불가 요일을 나타내는 문자열(예: '일,월' => 일요일, 월요일 방문불가) 가 있다고 가정 (칼럼 없이도 캘린더 페이지에서 로직이 있었다고 했으니 유사하게 구현)
-    // 없는 경우는 모두 방문 가능하다고 처리
-    // 여기서는 임의로 res_dayoff 라는 칼럼(콤마로 구분된 요일명) 가 있다고 가정. 없으면 빈 문자열 처리.
-    // 요일 매핑
-    const dayMap = ['일','월','화','수','목','금','토'];
+    const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
 
-    // 방문 가능 판단 함수: item 데이터 + 선택 날짜(yyyy-mm-dd) 받아서 true/false 반환
-    function isAvailableOnDay(item, dateStr) {
-      if (!dateStr) return true; // 날짜 선택 없으면 무조건 true
-
-      const date = new Date(dateStr);
-      const dayName = dayMap[date.getDay()]; // 예: '월'
-
-      // 예시로 res_dayoff가 없으면 빈 문자열로 처리 (원본 데이터에 없으면 '')
-      const dayOffStr = item.res_dayoff || '';
-
-      // 콤마로 분리 후 공백 제거
-      const dayOffArr = dayOffStr.split(',').map(s => s.trim());
-
-      // 해당 요일이 방문불가 요일 배열에 있으면 false
-      if (dayOffArr.includes(dayName)) return false;
-
-      return true;
+    function parseDate(str) {
+      const d = new Date(str);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
     async function loadAndDisplayMarkers() {
-      // 기존 마커 제거
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
-
+      markers.forEach(m => m.setMap(null)); markers = [];
       document.getElementById('success-list').innerHTML = '';
       document.getElementById('fail-list').innerHTML = '';
 
-      // 필요한 칼럼에 res_dayoff 추가 (예: 방문불가 요일 저장용) - 없으면 빈 문자열 처리됨
-      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c, res_dayoff');
-      if (error) {
-        alert('DB 데이터 불러오기 실패!');
-        console.error(error);
-        return;
-      }
+      const { data, error } = await supabase.from('sche').select('*');
+      if (error) { alert('DB 데이터 불러오기 실패!'); console.error(error); return; }
 
-      const selectedDate = possibleDateInput.value;
+      const selectedDate = parseDate(possibleDateInput.value);
+      const dayKey = dayNames[selectedDate.getDay()];
 
-      // 필터링
-      let filtered;
+      let filtered = data.filter(item => {
+        // 진행중 일정만
+        const start = parseDate(item.date_s);
+        const end = item.date_e ? parseDate(item.date_e) : start;
+        const inRange = start <= selectedDate && selectedDate <= end;
 
-      if (showPossibleOnly.checked) {
-        // 방문가능만: done=false, res_c=false, 그리고 날짜 기준 방문 가능 체크 추가
-        filtered = data.filter(item =>
-          !item.done &&
-          !item.res_c &&
-          isAvailableOnDay(item, selectedDate)
-        );
-      } else {
-        // 체크박스 필터 + 날짜 필터 모두 적용
-        filtered = data.filter(item => {
-          const doneOk = showDone.checked || item.done !== true;
-          const resOk = showRes.checked || item.res_c === true;
-          const dateOk = isAvailableOnDay(item, selectedDate);
-          return doneOk && resOk && dateOk;
-        });
-      }
+        // 요일 체크 (캘린더 페이지 로직 그대로)
+        const dayOk = item[dayKey] === 'Y';
+
+        // 체크박스 필터
+        const doneOk = showDone.checked || item.done !== true;
+        const resOk = showRes.checked || item.res_c === true;
+
+        if (showPossibleOnly.checked) {
+          return inRange && dayOk && !item.done && !item.res_c;
+        }
+        return inRange && dayOk && doneOk && resOk;
+      });
 
       const places = new kakao.maps.services.Places();
       const bounds = new kakao.maps.LatLngBounds();
 
-      for (const item of filtered) {
-        const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
-        if (!keyword) continue;
-
-        places.keywordSearch(keyword, function(result, status) {
+      filtered.forEach(item => {
+        const keyword = `${item.title} ${item.loca}`.trim();
+        places.keywordSearch(keyword, (res, status) => {
           if (status === kakao.maps.services.Status.OK) {
-            const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-
-            const marker = new kakao.maps.Marker({
-              map: map,
-              position: coords,
-              title: item.title
-            });
-
+            const coords = new kakao.maps.LatLng(res[0].y, res[0].x);
+            const marker = new kakao.maps.Marker({ map, position: coords, title: item.title });
             markers.push(marker);
-
-            const infoWindow = new kakao.maps.InfoWindow({
-              content: `<div style="padding:5px;font-size:14px;">
-                          <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
-                            <b>${item.title}</b><br>${item.loca}
-                          </a>
-                        </div>`
-            });
-
-            kakao.maps.event.addListener(marker, 'click', function() {
-              if (openInfoWindow) openInfoWindow.close();
-              infoWindow.open(map, marker);
-              openInfoWindow = infoWindow;
-            });
-
             bounds.extend(coords);
+
+            const iw = new kakao.maps.InfoWindow({ content:
+              `<div style="padding:5px;font-size:14px;"><a href="edit.html?id=${item.id}" target="_blank" style="color:blue;text-decoration:none;"><b>${item.title}</b><br>${item.loca}</a></div>`
+            });
+            kakao.maps.event.addListener(marker,'click', ()=>{ if(openInfoWindow)openInfoWindow.close(); iw.open(map,marker); openInfoWindow=iw; });
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td><td>${item.loca}</td><td>✅ 성공</td><td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title+' '+item.loca)}" target="_blank">네이버지도</a></td>`;
+            document.getElementById('success-list').appendChild(tr);
+
             map.setBounds(bounds);
-
-            // 목록 추가 (성공)
-            const successList = document.getElementById('success-list');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
-              <td>${item.loca}</td>
-              <td>✅ 성공</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-            `;
-            successList.appendChild(tr);
-
           } else {
-            console.warn('검색 실패:', keyword);
-
-            // 목록 추가 (실패)
-            const failList = document.getElementById('fail-list');
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td class="fail">${item.title}</td>
-              <td class="fail">${item.loca}</td>
-              <td class="fail">❌ 실패</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-            `;
-            failList.appendChild(tr);
+            tr.innerHTML = `<td class="fail">${item.title}</td><td class="fail">${item.loca}</td><td class="fail">❌ 실패</td><td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title+' '+item.loca)}" target="_blank">네이버지도</a></td>`;
+            document.getElementById('fail-list').appendChild(tr);
           }
         });
-      }
+      });
     }
 
-    // 방문가능만 체크박스 변경시 나머지 체크박스 해제 처리
-    showPossibleOnly.addEventListener('change', () => {
-      if (showPossibleOnly.checked) {
-        showDone.checked = false;
-        showRes.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
+    showPossibleOnly.addEventListener('change', ()=>{ if(showPossibleOnly.checked){ showDone.checked=false; showRes.checked=false;} loadAndDisplayMarkers(); });
+    showDone.addEventListener('change', ()=>{ if(showDone.checked) showPossibleOnly.checked=false; loadAndDisplayMarkers(); });
+    showRes.addEventListener('change', ()=>{ if(showRes.checked) showPossibleOnly.checked=false; loadAndDisplayMarkers(); });
+    possibleDateInput.addEventListener('change', loadAndDisplayMarkers);
 
-    // 나머지 체크박스 변경시 방문가능만 체크 해제
-    showDone.addEventListener('change', () => {
-      if (showDone.checked) {
-        showPossibleOnly.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
+    kakao.maps.event.addListener(map,'click',()=>{ if(openInfoWindow) openInfoWindow.close(); openInfoWindow=null; });
 
-    showRes.addEventListener('change', () => {
-      if (showRes.checked) {
-        showPossibleOnly.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
-
-    // 날짜 선택 변경 시 필터 적용
-    possibleDateInput.addEventListener('change', () => {
-      loadAndDisplayMarkers();
-    });
-
-    // 지도 클릭 시 인포윈도우 닫기
-    kakao.maps.event.addListener(map, 'click', function() {
-      if (openInfoWindow) {
-        openInfoWindow.close();
-        openInfoWindow = null;
-      }
-    });
-
-    // 첫 로딩
     loadAndDisplayMarkers();
   </script>
 </body>
