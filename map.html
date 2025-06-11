@@ -44,7 +44,7 @@
       font-size: 12px;
     }
   </style>
-  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -55,7 +55,7 @@
     <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
     <label>
       <input type="checkbox" id="showAvail"> 방문가능만
-      <input type="date" id="availDate" value="" style="margin-left:5px;">
+      <input type="date" id="availDate" style="margin-left:5px;">
     </label>
   </div>
 
@@ -90,7 +90,8 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const { createClient } = supabase;
+    const supa = createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
     );
@@ -126,7 +127,7 @@
       document.getElementById('success-list').innerHTML = '';
       document.getElementById('fail-list').innerHTML = '';
 
-      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c, start, end, disable');
+      const { data, error } = await supa.from('sche').select('id, title, loca, done, res_c, start, end, disable');
       if (error) {
         alert('DB 데이터 불러오기 실패!');
         console.error(error);
@@ -185,7 +186,6 @@
               bounds.extend(coords);
               map.setBounds(bounds);
 
-              const successList = document.getElementById('success-list');
               const tr = document.createElement('tr');
               tr.innerHTML = `
                 <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
@@ -193,12 +193,11 @@
                 <td>✅ 성공</td>
                 <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
               `;
-              successList.appendChild(tr);
+              document.getElementById('success-list').appendChild(tr);
             } else {
               if (!isRetry && keyword !== keywordTitleOnly) {
                 searchPlace(keywordTitleOnly, true);
               } else {
-                const failList = document.getElementById('fail-list');
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                   <td class="fail">${item.title}</td>
@@ -206,7 +205,7 @@
                   <td class="fail">❌ 실패</td>
                   <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
                 `;
-                failList.appendChild(tr);
+                document.getElementById('fail-list').appendChild(tr);
               }
             }
           });
@@ -235,9 +234,7 @@
     });
     document.getElementById('availDate').addEventListener('change', loadAndDisplayMarkers);
 
-    // 오늘 날짜 기본값 설정
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('availDate').value = today;
+    document.getElementById('availDate').value = new Date().toISOString().split('T')[0];
 
     loadAndDisplayMarkers();
   </script>
