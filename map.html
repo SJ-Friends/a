@@ -1,242 +1,115 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>일상을 여행처럼</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>일상 지도</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <style>
-    #map { width: 100%; height: 70vh; }
-    .filter-bar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      padding: 10px;
-      background: #f9f9f9;
-      font-size: 14px;
-      flex-wrap: wrap;
-    }
-    #list {
-      padding: 20px;
+    #calendar {
       max-width: 1000px;
-      margin: auto;
+      margin: 20px auto;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+    .fc-event {
+      cursor: pointer;
+    }
+    .controls {
+      max-width: 1000px;
+      margin: 20px auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
       font-size: 14px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background: #f2f2f2;
-    }
-    .fail {
-      color: red;
-    }
-    .naver-link {
-      color: #0077cc;
-      text-decoration: underline;
-      font-size: 12px;
     }
   </style>
-  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼 map</h2>
-
-  <div class="filter-bar">
-    <label><input type="checkbox" id="showDone" checked> 완료 포함</label>
-    <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
-    <label>
-      <input type="checkbox" id="showAvail"> 방문가능만
-      <input type="date" id="availDate" style="margin-left:5px;">
-    </label>
+  <h2 style="text-align:center;">📅 일상 지도</h2>
+  <div class="controls">
+    <label><input type="checkbox" id="showDone"> 완료 일정 포함</label>
+    <label><input type="checkbox" id="showAvailableOnly"> 방문가능만</label>
+    <label>기준일: <input type="date" id="availDate"></label>
   </div>
+  <div id="calendar"></div>
 
-  <div id="map"></div>
-
-  <div id="list">
-    <h3>📝 데이터 목록</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>상호명</th>
-          <th>지역</th>
-          <th>상태</th>
-          <th>네이버 검색</th>
-        </tr>
-      </thead>
-      <tbody id="success-list"></tbody>
-    </table>
-
-    <h3>❗ 검색 실패 목록</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>상호명</th>
-          <th>지역</th>
-          <th>상태</th>
-          <th>네이버 검색</th>
-        </tr>
-      </thead>
-      <tbody id="fail-list"></tbody>
-    </table>
-  </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const { createClient } = supabase;
-    const supa = createClient(
+    const supabase = window.supabase.createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
     );
 
-    const mapContainer = document.getElementById('map');
-    const mapOption = {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
-      level: 5
-    };
-    const map = new kakao.maps.Map(mapContainer, mapOption);
-    let markers = [];
-    let openInfoWindow = null;
+    document.getElementById('availDate').value = new Date().toISOString().split('T')[0];
 
-    function getYoil(dateStr) {
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      return days[new Date(dateStr).getDay()];
-    }
-
-    function isAvailable(item, dateStr) {
-      const target = new Date(dateStr);
-      const start = new Date(item.start);
-      const end = new Date(item.end);
-      const yoil = getYoil(dateStr);
-      if (target < start || target > end) return false;
-      if (item.disable && item.disable.includes(yoil)) return false;
-      return true;
-    }
-
-    async function loadAndDisplayMarkers() {
-      markers.forEach(marker => marker.setMap(null));
-      markers = [];
-
-      document.getElementById('success-list').innerHTML = '';
-      document.getElementById('fail-list').innerHTML = '';
-
-      const { data, error } = await supa.from('sche').select('id, title, loca, done, res_c, start, end, disable');
+    async function loadEvents() {
+      const { data, error } = await supabase.from('sche').select('*');
       if (error) {
-        alert('DB 데이터 불러오기 실패!');
+        alert('데이터 불러오기 실패');
         console.error(error);
-        return;
+        return [];
       }
 
       const showDone = document.getElementById('showDone').checked;
-      const showRes = document.getElementById('showRes').checked;
-      const showAvail = document.getElementById('showAvail').checked;
-      const availDate = document.getElementById('availDate').value;
+      const showAvailableOnly = document.getElementById('showAvailableOnly').checked;
+      const availDateStr = document.getElementById('availDate').value;
+      const availDate = new Date(availDateStr);
+      const yoilKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][availDate.getDay()];
 
       const filtered = data.filter(item => {
-        if (showAvail) {
-          return isAvailable(item, availDate);
-        } else {
-          const doneOk = showDone || item.done !== true;
-          const resOk = showRes || item.res_c === true;
-          return doneOk && resOk;
+        if (!showDone && item.done) return false;
+
+        if (showAvailableOnly) {
+          const start = new Date(item.date_s);
+          const end = new Date(item.date_e);
+          return item[yoilKey] === 'Y' && start <= availDate && end >= availDate;
         }
+
+        return true;
       });
 
-      const places = new kakao.maps.services.Places();
-      const bounds = new kakao.maps.LatLngBounds();
-
-      for (const item of filtered) {
-        const keywordFull = `${item.title || ''} ${item.loca || ''}`.trim();
-        const keywordTitleOnly = `${item.title || ''}`.trim();
-
-        function searchPlace(keyword, isRetry = false) {
-          places.keywordSearch(keyword, function(result, status) {
-            if (status === kakao.maps.services.Status.OK) {
-              const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-
-              const marker = new kakao.maps.Marker({
-                map: map,
-                position: coords,
-                title: item.title
-              });
-
-              markers.push(marker);
-
-              const infoWindow = new kakao.maps.InfoWindow({
-                content: `<div style="padding:5px;font-size:14px;">
-                            <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
-                              <b>${item.title}</b><br>${item.loca}
-                            </a>
-                          </div>`
-              });
-
-              kakao.maps.event.addListener(marker, 'click', function() {
-                if (openInfoWindow) openInfoWindow.close();
-                infoWindow.open(map, marker);
-                openInfoWindow = infoWindow;
-              });
-
-              bounds.extend(coords);
-              map.setBounds(bounds);
-
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
-                <td>${item.loca}</td>
-                <td>✅ 성공</td>
-                <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-              `;
-              document.getElementById('success-list').appendChild(tr);
-            } else {
-              if (!isRetry && keyword !== keywordTitleOnly) {
-                searchPlace(keywordTitleOnly, true);
-              } else {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                  <td class="fail">${item.title}</td>
-                  <td class="fail">${item.loca}</td>
-                  <td class="fail">❌ 실패</td>
-                  <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
-                `;
-                document.getElementById('fail-list').appendChild(tr);
-              }
-            }
-          });
-        }
-
-        searchPlace(keywordFull);
-      }
+      return filtered.map(item => ({
+        id: item.id,
+        title: item.title,
+        start: item.date_s,
+        end: item.date_e,
+        backgroundColor: item.office === '네이버' ? '#fee' : '#eef',
+        borderColor: '#999',
+        textColor: '#333',
+        extendedProps: item
+      }));
     }
 
-    kakao.maps.event.addListener(map, 'click', function() {
-      if (openInfoWindow) {
-        openInfoWindow.close();
-        openInfoWindow = null;
-      }
+    function openModal(dateStr) {
+      alert(`[${dateStr}] 상세 보기 (구현 필요)`);
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ko',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,listMonth'
+        },
+        events: await loadEvents(),
+        dateClick: function (info) {
+          openModal(info.dateStr);
+        }
+      });
+      calendar.render();
+
+      ['showDone', 'showAvailableOnly', 'availDate'].forEach(id => {
+        document.getElementById(id).addEventListener('change', async () => {
+          const events = await loadEvents();
+          calendar.removeAllEvents();
+          calendar.addEventSource(events);
+        });
+      });
     });
-
-    document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
-    document.getElementById('showRes').addEventListener('change', loadAndDisplayMarkers);
-    document.getElementById('showAvail').addEventListener('change', (e) => {
-      const checked = e.target.checked;
-      if (checked) {
-        document.getElementById('showDone').checked = false;
-        document.getElementById('showRes').checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
-    document.getElementById('availDate').addEventListener('change', loadAndDisplayMarkers);
-
-    document.getElementById('availDate').value = new Date().toISOString().split('T')[0];
-
-    loadAndDisplayMarkers();
   </script>
 </body>
 </html>
