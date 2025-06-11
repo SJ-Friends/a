@@ -120,6 +120,31 @@
     const showDone = document.getElementById('showDone');
     const showRes = document.getElementById('showRes');
 
+    // 예시: item에 방문불가 요일을 나타내는 문자열(예: '일,월' => 일요일, 월요일 방문불가) 가 있다고 가정 (칼럼 없이도 캘린더 페이지에서 로직이 있었다고 했으니 유사하게 구현)
+    // 없는 경우는 모두 방문 가능하다고 처리
+    // 여기서는 임의로 res_dayoff 라는 칼럼(콤마로 구분된 요일명) 가 있다고 가정. 없으면 빈 문자열 처리.
+    // 요일 매핑
+    const dayMap = ['일','월','화','수','목','금','토'];
+
+    // 방문 가능 판단 함수: item 데이터 + 선택 날짜(yyyy-mm-dd) 받아서 true/false 반환
+    function isAvailableOnDay(item, dateStr) {
+      if (!dateStr) return true; // 날짜 선택 없으면 무조건 true
+
+      const date = new Date(dateStr);
+      const dayName = dayMap[date.getDay()]; // 예: '월'
+
+      // 예시로 res_dayoff가 없으면 빈 문자열로 처리 (원본 데이터에 없으면 '')
+      const dayOffStr = item.res_dayoff || '';
+
+      // 콤마로 분리 후 공백 제거
+      const dayOffArr = dayOffStr.split(',').map(s => s.trim());
+
+      // 해당 요일이 방문불가 요일 배열에 있으면 false
+      if (dayOffArr.includes(dayName)) return false;
+
+      return true;
+    }
+
     async function loadAndDisplayMarkers() {
       // 기존 마커 제거
       markers.forEach(marker => marker.setMap(null));
@@ -128,24 +153,33 @@
       document.getElementById('success-list').innerHTML = '';
       document.getElementById('fail-list').innerHTML = '';
 
-      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
+      // 필요한 칼럼에 res_dayoff 추가 (예: 방문불가 요일 저장용) - 없으면 빈 문자열 처리됨
+      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c, res_dayoff');
       if (error) {
         alert('DB 데이터 불러오기 실패!');
         console.error(error);
         return;
       }
 
+      const selectedDate = possibleDateInput.value;
+
       // 필터링
       let filtered;
 
       if (showPossibleOnly.checked) {
-        // 방문가능만: done=false, res_c=false 조건
-        filtered = data.filter(item => !item.done && !item.res_c);
+        // 방문가능만: done=false, res_c=false, 그리고 날짜 기준 방문 가능 체크 추가
+        filtered = data.filter(item =>
+          !item.done &&
+          !item.res_c &&
+          isAvailableOnDay(item, selectedDate)
+        );
       } else {
+        // 체크박스 필터 + 날짜 필터 모두 적용
         filtered = data.filter(item => {
           const doneOk = showDone.checked || item.done !== true;
           const resOk = showRes.checked || item.res_c === true;
-          return doneOk && resOk;
+          const dateOk = isAvailableOnDay(item, selectedDate);
+          return doneOk && resOk && dateOk;
         });
       }
 
@@ -238,9 +272,8 @@
       loadAndDisplayMarkers();
     });
 
-    // 날짜 선택 변경 시 (현재 날짜 필터 미적용 상태이지만, 요청에 맞게 이벤트 추가)
+    // 날짜 선택 변경 시 필터 적용
     possibleDateInput.addEventListener('change', () => {
-      // 만약 날짜별 필터링 로직 필요 시 여기에 추가 가능
       loadAndDisplayMarkers();
     });
 
