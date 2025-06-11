@@ -14,6 +14,7 @@
       padding: 10px;
       background: #f9f9f9;
       font-size: 14px;
+      flex-wrap: wrap;
     }
     #list {
       padding: 20px;
@@ -52,6 +53,10 @@
   <div class="filter-bar">
     <label><input type="checkbox" id="showDone" checked> 완료 포함</label>
     <label><input type="checkbox" id="showRes" checked> 예약완료 포함</label>
+    <label>
+      <input type="checkbox" id="showAvail"> 방문가능만
+      <input type="date" id="availDate" value="" style="margin-left:5px;">
+    </label>
   </div>
 
   <div id="map"></div>
@@ -99,6 +104,21 @@
     let markers = [];
     let openInfoWindow = null;
 
+    function getYoil(dateStr) {
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      return days[new Date(dateStr).getDay()];
+    }
+
+    function isAvailable(item, dateStr) {
+      const target = new Date(dateStr);
+      const start = new Date(item.start);
+      const end = new Date(item.end);
+      const yoil = getYoil(dateStr);
+      if (target < start || target > end) return false;
+      if (item.disable && item.disable.includes(yoil)) return false;
+      return true;
+    }
+
     async function loadAndDisplayMarkers() {
       markers.forEach(marker => marker.setMap(null));
       markers = [];
@@ -106,7 +126,7 @@
       document.getElementById('success-list').innerHTML = '';
       document.getElementById('fail-list').innerHTML = '';
 
-      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
+      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c, start, end, disable');
       if (error) {
         alert('DB 데이터 불러오기 실패!');
         console.error(error);
@@ -115,11 +135,17 @@
 
       const showDone = document.getElementById('showDone').checked;
       const showRes = document.getElementById('showRes').checked;
+      const showAvail = document.getElementById('showAvail').checked;
+      const availDate = document.getElementById('availDate').value;
 
       const filtered = data.filter(item => {
-        const doneOk = showDone || item.done !== true;
-        const resOk = showRes || item.res_c === true;
-        return doneOk && resOk;
+        if (showAvail) {
+          return isAvailable(item, availDate);
+        } else {
+          const doneOk = showDone || item.done !== true;
+          const resOk = showRes || item.res_c === true;
+          return doneOk && resOk;
+        }
       });
 
       const places = new kakao.maps.services.Places();
@@ -170,12 +196,8 @@
               successList.appendChild(tr);
             } else {
               if (!isRetry && keyword !== keywordTitleOnly) {
-                // ⭐ 추가: 첫 시도 실패 → loca 생략하고 title로 재시도
-                console.warn(`1차 검색 실패: ${keyword}, 재시도: ${keywordTitleOnly}`);
                 searchPlace(keywordTitleOnly, true);
               } else {
-                console.warn('검색 실패 최종:', keyword);
-
                 const failList = document.getElementById('fail-list');
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -190,7 +212,7 @@
           });
         }
 
-        searchPlace(keywordFull);  // 첫 검색 시도
+        searchPlace(keywordFull);
       }
     }
 
@@ -203,6 +225,19 @@
 
     document.getElementById('showDone').addEventListener('change', loadAndDisplayMarkers);
     document.getElementById('showRes').addEventListener('change', loadAndDisplayMarkers);
+    document.getElementById('showAvail').addEventListener('change', (e) => {
+      const checked = e.target.checked;
+      if (checked) {
+        document.getElementById('showDone').checked = false;
+        document.getElementById('showRes').checked = false;
+      }
+      loadAndDisplayMarkers();
+    });
+    document.getElementById('availDate').addEventListener('change', loadAndDisplayMarkers);
+
+    // 오늘 날짜 기본값 설정
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('availDate').value = today;
 
     loadAndDisplayMarkers();
   </script>
