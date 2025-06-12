@@ -55,7 +55,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼 map</h2>
+  <h2 style="text-align:center;">일상을 여행처럼 map!</h2>
 
   <div class="filter-bar">
     <label><input type="checkbox" id="showDone" checked> 완료 포함</label>
@@ -96,27 +96,29 @@
     </table>
   </div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-    );
+ <script>
+  const supabase = window.supabase.createClient(
+    'https://xxmtxuhcdzidhrefrvwf.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+  );
 
-    let map = new naver.maps.Map("map", {
+  let map;
+  let markers = [];
+
+  const possibleDateInput = document.getElementById('possibleDate');
+  const showPossibleOnly = document.getElementById('showPossibleOnly');
+  const showDone = document.getElementById('showDone');
+  const showRes = document.getElementById('showRes');
+
+  possibleDateInput.value = new Date().toISOString().slice(0, 10);
+
+  naver.maps.onJSContentLoaded = function () {
+    map = new naver.maps.Map("map", {
       center: new naver.maps.LatLng(37.5665, 126.9780),
       zoom: 12
     });
 
-    const possibleDateInput = document.getElementById('possibleDate');
-    possibleDateInput.value = new Date().toISOString().slice(0, 10);
-
-    const showPossibleOnly = document.getElementById('showPossibleOnly');
-    const showDone = document.getElementById('showDone');
-    const showRes = document.getElementById('showRes');
-    let markers = [];
-
     async function loadAndDisplayMarkers() {
-      // 기존 마커 제거
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
@@ -146,7 +148,6 @@
 
         naver.maps.Service.geocode({ query: keyword }, function(status, response) {
           if (status !== naver.maps.Service.Status.OK || !response.v2.addresses.length) {
-            // 실패 목록
             const failList = document.getElementById('fail-list');
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -197,6 +198,7 @@
       }
     }
 
+    // 이벤트 등록 및 첫 로드
     showPossibleOnly.addEventListener('change', () => {
       if (showPossibleOnly.checked) {
         showDone.checked = false;
@@ -223,7 +225,9 @@
       loadAndDisplayMarkers();
     });
 
-    loadAndDisplayMarkers();
-  </script>
+    loadAndDisplayMarkers(); // 최초 로드
+  };
+</script>
+
 </body>
 </html>
