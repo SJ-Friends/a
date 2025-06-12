@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>Dynamic Map 테스트</title>
+  <script 
+    src="https://maps.apigw.ntruss.com/openapi/v3/maps.js?
+         ncpClientId=3t661n7ihz
+         &submodules=geocoder">
+  </script>
+</head><body>
+  <div id="map" style="width:100%;height:300px"></div>
+  <script>
+    try {
+      new naver.maps.Map('map', {
+        center: new naver.maps.LatLng(37.5665, 126.9780),
+        zoom: 12
+      });
+      console.log('지도 생성 성공');
+    } catch(e) {
+      console.error('지도 생성 오류:', e);
+    }
+  </script>
+</body></html>
