@@ -1,17 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>네이버지도 최소 테스트</title>
-  <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=dorbmuk4px"></script>
-</head>
+<head><meta charset="utf-8"><title>Static Map 테스트</title></head>
 <body>
-  <div id="map" style="width:100%;height:300px;"></div>
-  <script>
-    new naver.maps.Map('map', {
-      center: new naver.maps.LatLng(37.5665, 126.9780),
-      zoom: 12
-    });
-  </script>
+  <h3>Static Map 이미지</h3>
+  <img
+    src="https://openapi.map.naver.com/map-static/v2/raster?clientId=hh72jmofpo&center=126.9780,37.5665&level=12&w=600&h=300"
+    alt="Static Map"
+  />
 </body>
 </html>
