@@ -2,40 +2,55 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>REST 페일백 예제</title>
+  <title>REST 페일백 예제2</title>
   <script src="https://openapi.map.naver.com/openapi/v3/maps.js?clientId=3t661n7ihz"></script>
   <style>html,body,#map{margin:0;padding:0;height:100%}</style>
 </head>
 <body>
   <div id="map"></div>
-  <script>
-    // 1) 지도 생성
-    const map = new naver.maps.Map('map', {
-      center: new naver.maps.LatLng(35.159667, 129.059384),
-      zoom: 15
-    });
+<script>
+  // (1) 지도 초기화
+  const map = new naver.maps.Map('map', {
+    center: new naver.maps.LatLng(35.159667, 129.059384),
+    zoom: 15
+  });
 
-    // 2) REST 지오코딩 호출
-    fetch(
-      'https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?' +
-        new URLSearchParams({ query: '정성순대 연산동' })
-    , {
-      headers: {
-        'X-NCP-APIGW-API-KEY-ID': '3t661n7ihz',
-        'X-NCP-APIGW-API-KEY':     'fKanOw28u03oC4Q7xlGamZCtwAzjUtm5k9YniH8x'
-      }
-    })
-    .then(res => res.json())
-    .then(json => {
-      const addr = json.addresses[0];
-      const coord = new naver.maps.LatLng(addr.y, addr.x);
-      map.setCenter(coord);
-      new naver.maps.Marker({ position: coord, map: map });
-    })
-    .catch(err => {
-      console.error('REST 지오코딩 에러', err);
-      alert('지오코딩 요청 중 오류가 발생했습니다.');
-    });
-  </script>
+  // (2) REST 지오코딩 URL 구성
+  const url = new URL(
+    'https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode'
+  );
+  url.searchParams.append('query', '정성순대 연산동');
+
+  console.log('🚀 요청 URL:', url.href);
+
+  // (3) fetch 호출
+  fetch(url.href, {
+    headers: {
+      'X-NCP-APIGW-API-KEY-ID': '3t661n7ihz',
+      'X-NCP-APIGW-API-KEY':    'fKanOw28u03oC4Q7xlGamZCtwAzjUtm5k9YniH8x'
+    }
+  })
+  .then(res => {
+    console.log('📥 응답 상태:', res.status, res.statusText);
+    if (!res.ok) {
+      return res.text().then(body => {
+        throw new Error(`HTTP ${res.status} – ${body}`);
+      });
+    }
+    return res.json();
+  })
+  .then(json => {
+    console.log('✅ 지오코딩 결과:', json);
+    const addr = json.addresses[0];
+    const coord = new naver.maps.LatLng(addr.y, addr.x);
+    map.setCenter(coord);
+    new naver.maps.Marker({ position: coord, map: map });
+  })
+  .catch(err => {
+    console.error('❌ REST 지오코딩 에러:', err);
+    alert(`지오코딩 요청 오류: ${err.message}`);
+  });
+</script>
+
 </body>
 </html>
