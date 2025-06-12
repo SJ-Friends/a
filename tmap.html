@@ -1,45 +1,47 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>REST 페일백 예제4</title>
-  <script src="https://openapi.map.naver.com/openapi/v3/maps.js?clientId=3t661n7ihz"></script>
-  <style>html,body,#map{margin:0;padding:0;height:100%}</style>
+  <meta charset="UTF-8"/>
+  <title>정성순대 연산동 위치</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+
+  <!-- ★여기★
+       한 줄로만, 파라미터 이름은 반드시 ncpKeyId=YOUR_CLIENT_ID
+       submodules=geocoder 를 붙여야 지오코딩 모듈이 로드됩니다. -->
+  <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=3t661n7ihz&submodules=geocoder">
+  </script>
+
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    #map { width:100%; height:100%; }
+  </style>
 </head>
 <body>
   <div id="map"></div>
+
   <script>
-    // 지도 생성
+    // 1) 지도 초기화 (연산동 근처)
     const map = new naver.maps.Map('map', {
       center: new naver.maps.LatLng(35.159667, 129.059384),
       zoom: 15
     });
 
-    // 절대 URL 로 REST 지오코딩
-    const query = encodeURIComponent('정성순대 연산동');
-    const url   = 'https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode'
-                + '?query=' + query;
+    // 2) Geocoder 모듈로 주소 → 좌표 변환
+    naver.maps.Service.geocode(
+      { query: '정성순대 연산동' },
+      (status, response) => {
+        if (status !== naver.maps.Service.Status.OK) {
+          return console.error('Geocode 실패:', status);
+        }
+        // v3 모듈은 response.result.items 배열을 답으로 줍니다
+        const item  = response.result.items[0];
+        const coord = new naver.maps.LatLng(item.point.y, item.point.x);
 
-    fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-NCP-APIGW-API-KEY-ID': '3t661n7ihz',
-        'X-NCP-APIGW-API-KEY':    'fKanOw28u03oC4Q7xlGamZCtwAzjUtm5k9YniH8x'
+        // 3) 지도 중심 이동 & 마커 생성
+        map.setCenter(coord);
+        new naver.maps.Marker({ position: coord, map: map });
       }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(json => {
-      const addr  = json.addresses[0];
-      const coord = new naver.maps.LatLng(addr.y, addr.x);
-      map.setCenter(coord);
-      new naver.maps.Marker({ position: coord, map });
-    })
-    .catch(err => {
-      console.error('REST 지오코딩 오류:', err);
-    });
+    );
   </script>
 </body>
 </html>
