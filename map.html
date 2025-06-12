@@ -31,36 +31,30 @@
       padding: 8px;
       text-align: center;
     }
-    th {
-      background: #f2f2f2;
-    }
-    .fail {
-      color: red;
-    }
+    th { background: #f2f2f2; }
+    .fail { color: red; }
     .naver-link {
       color: #0077cc;
       text-decoration: underline;
       font-size: 12px;
     }
-    label {
-      user-select: none;
-    }
-    input[type="date"] {
-      font-size: 14px;
-      padding: 2px 6px;
-      margin-left: 6px;
-    }
   </style>
-  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services"></script>
+
+  <!-- 원본에 입력된 Kakao Maps SDK 키 그대로 -->
+  <script type="text/javascript"
+    src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a49fe18b80104f2300aeaadfc1cd9924&libraries=services">
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h2 style="text-align:center;">일상을 여행처럼 map</h2>
+  <h2 style="text-align:center;">일상을 여행처럼 map.</h2>
 
   <div class="filter-bar">
     <label><input type="checkbox" id="showDone" checked> 완료 포함</label>
-    <label><input type="checkbox" id="showPossibleOnly"> 방문가능만
-    <input type="date" id="possibleDate" />
+    <label>
+      <input type="checkbox" id="showPossibleOnly"> 방문가능만
+      <input type="date" id="possibleDate" />
     </label>
   </div>
 
@@ -70,12 +64,7 @@
     <h3>📝 데이터 목록</h3>
     <table>
       <thead>
-        <tr>
-          <th>상호명</th>
-          <th>지역</th>
-          <th>상태</th>
-          <th>네이버 검색</th>
-        </tr>
+        <tr><th>상호명</th><th>지역</th><th>상태</th><th>네이버 검색</th></tr>
       </thead>
       <tbody id="success-list"></tbody>
     </table>
@@ -83,98 +72,82 @@
     <h3>❗ 검색 실패 목록</h3>
     <table>
       <thead>
-        <tr>
-          <th>상호명</th>
-          <th>지역</th>
-          <th>상태</th>
-          <th>네이버 검색</th>
-        </tr>
+        <tr><th>상호명</th><th>지역</th><th>상태</th><th>네이버 검색</th></tr>
       </thead>
       <tbody id="fail-list"></tbody>
     </table>
   </div>
 
   <script>
+    // 원본에 입력된 Supabase URL & 키 그대로
     const supabase = window.supabase.createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh...6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
     );
 
-    const mapContainer = document.getElementById('map');
-    const mapOption = {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
-      level: 5
-    };
-    const map = new kakao.maps.Map(mapContainer, mapOption);
-    let markers = [];
-    let openInfoWindow = null;
+    const map = new kakao.maps.Map(
+      document.getElementById('map'),
+      { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 5 }
+    );
 
-    // 날짜 달력 초기값 오늘로 세팅
+    let markers = [], openInfoWindow = null;
     const possibleDateInput = document.getElementById('possibleDate');
     possibleDateInput.value = new Date().toISOString().slice(0,10);
-
-    // 방문가능만 체크박스, showDone, showRes 요소
     const showPossibleOnly = document.getElementById('showPossibleOnly');
     const showDone = document.getElementById('showDone');
-    const showRes = document.getElementById('showRes');
 
     async function loadAndDisplayMarkers() {
-      // 기존 마커 제거
-      markers.forEach(marker => marker.setMap(null));
+      // 지도 & 목록 초기화
+      markers.forEach(m => m.setMap(null));
       markers = [];
-
       document.getElementById('success-list').innerHTML = '';
       document.getElementById('fail-list').innerHTML = '';
 
-      const { data, error } = await supabase.from('sche').select('id, title, loca, done, res_c');
-      if (error) {
-        alert('DB 데이터 불러오기 실패!');
-        console.error(error);
-        return;
-      }
+      // DB에서 일정 불러오기 (요일 정보 포함)
+      const { data, error } = await supabase
+        .from('sche')
+        .select('id, title, loca, done, res_c, date_s, date_e, mon, tue, wed, thu, fri, sat, sun');
+      if (error) return alert('DB 데이터 불러오기 실패!');
 
-      // 필터링
-      let filtered;
-
+      let filtered = data;
       if (showPossibleOnly.checked) {
-        // 방문가능만: done=false, res_c=false 조건
-        filtered = data.filter(item => !item.done && !item.res_c);
-      } else {
+        const selDate = new Date(possibleDateInput.value);
+        const dayMap = {0:'sun',1:'mon',2:'tue',3:'wed',4:'thu',5:'fri',6:'sat'};
+        const dow = dayMap[selDate.getDay()];
+
         filtered = data.filter(item => {
-          const doneOk = showDone.checked || item.done !== true;
-          const resOk = showRes.checked || item.res_c === true;
-          return doneOk && resOk;
+          if (item.done || item.res_c) return false;
+          const start = new Date(item.date_s), end = new Date(item.date_e);
+          if (selDate < start || selDate > end) return false;
+          if (item[dow] !== 'Y') return false;
+          return true;
         });
+      } else {
+        filtered = data.filter(item => showDone.checked || item.done !== true);
       }
 
+      // 키워드 검색 & 마커 생성
       const places = new kakao.maps.services.Places();
       const bounds = new kakao.maps.LatLngBounds();
 
-      for (const item of filtered) {
-        const keyword = `${item.title || ''} ${item.loca || ''}`.trim();
-        if (!keyword) continue;
+      filtered.forEach(item => {
+        const keyword = `${item.title} ${item.loca}`.trim();
+        if (!keyword) return;
 
-        places.keywordSearch(keyword, function(result, status) {
+        places.keywordSearch(keyword, (result, status) => {
           if (status === kakao.maps.services.Status.OK) {
             const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-
-            const marker = new kakao.maps.Marker({
-              map: map,
-              position: coords,
-              title: item.title
-            });
-
+            const marker = new kakao.maps.Marker({ map, position: coords, title: item.title });
             markers.push(marker);
 
             const infoWindow = new kakao.maps.InfoWindow({
               content: `<div style="padding:5px;font-size:14px;">
-                          <a href="edit.html?id=${item.id}" style="text-decoration:none;color:blue;" target="_blank">
+                          <a href="edit.html?id=${item.id}" target="_blank" style="color:blue;text-decoration:none;">
                             <b>${item.title}</b><br>${item.loca}
                           </a>
                         </div>`
             });
-
-            kakao.maps.event.addListener(marker, 'click', function() {
+            kakao.maps.event.addListener(marker, 'click', () => {
               if (openInfoWindow) openInfoWindow.close();
               infoWindow.open(map, marker);
               openInfoWindow = infoWindow;
@@ -183,74 +156,35 @@
             bounds.extend(coords);
             map.setBounds(bounds);
 
-            // 목록 추가 (성공)
-            const successList = document.getElementById('success-list');
+            // 성공 리스트
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
-              <td>${item.loca}</td>
-              <td>✅ 성공</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+              <td>${item.loca}</td><td>✅ 성공</td>
+              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(keyword)}" target="_blank">네이버지도</a></td>
             `;
-            successList.appendChild(tr);
+            document.getElementById('success-list').appendChild(tr);
 
           } else {
-            console.warn('검색 실패:', keyword);
-
-            // 목록 추가 (실패)
-            const failList = document.getElementById('fail-list');
+            // 실패 리스트
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td class="fail"><a href="edit.html?id=${item.id}" target="_blank">${item.title}</a></td>
-              <td class="fail">${item.loca}</td>
-              <td class="fail">❌ 실패</td>
-              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(item.title + ' ' + item.loca)}" target="_blank">네이버지도</a></td>
+              <td class="fail">${item.loca}</td><td class="fail">❌ 실패</td>
+              <td><a class="naver-link" href="https://map.naver.com/v5/search/${encodeURIComponent(keyword)}" target="_blank">네이버지도</a></td>
             `;
-            failList.appendChild(tr);
+            document.getElementById('fail-list').appendChild(tr);
           }
         });
-      }
+      });
     }
 
-    // 방문가능만 체크박스 변경시 나머지 체크박스 해제 처리
-    showPossibleOnly.addEventListener('change', () => {
-      if (showPossibleOnly.checked) {
-        showDone.checked = false;
-        showRes.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
+    // 필터 변경 시 로드
+    showPossibleOnly.addEventListener('change', () => { showDone.checked = false; loadAndDisplayMarkers(); });
+    showDone.addEventListener('change', () => { showPossibleOnly.checked = false; loadAndDisplayMarkers(); });
+    possibleDateInput.addEventListener('change', loadAndDisplayMarkers);
 
-    // 나머지 체크박스 변경시 방문가능만 체크 해제
-    showDone.addEventListener('change', () => {
-      if (showDone.checked) {
-        showPossibleOnly.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
-
-    showRes.addEventListener('change', () => {
-      if (showRes.checked) {
-        showPossibleOnly.checked = false;
-      }
-      loadAndDisplayMarkers();
-    });
-
-    // 날짜 선택 변경 시 (현재 날짜 필터 미적용 상태이지만, 요청에 맞게 이벤트 추가)
-    possibleDateInput.addEventListener('change', () => {
-      // 만약 날짜별 필터링 로직 필요 시 여기에 추가 가능
-      loadAndDisplayMarkers();
-    });
-
-    // 지도 클릭 시 인포윈도우 닫기
-    kakao.maps.event.addListener(map, 'click', function() {
-      if (openInfoWindow) {
-        openInfoWindow.close();
-        openInfoWindow = null;
-      }
-    });
-
-    // 첫 로딩
+    // 초기 실행
     loadAndDisplayMarkers();
   </script>
 </body>
