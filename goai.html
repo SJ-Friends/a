@@ -137,7 +137,7 @@ function addToSentence(field) {
   if (field === 'title') value = document.getElementById('titleInput').value + '에 대해 아래를 참고해서 블로그를 작성해줘'+ '\n';
   else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는 ';
   else if (field === 'memo') value = '○ 주문한 메뉴 : ' + document.getElementById('memoInput').value+ '\n'+ '\n';
-  else if (field === 'kword') value = '○ 키워드는 : ' + document.getElementById('kwordInput').value+ '\n';
+  else if (field === 'kword') value = '○ 키워드는 : ' + document.getElementById('kwordInput').value+ ' 으로,\n본문에 자연스럽게 다섯번 이상 넣어서 작성해줘\n';
   if (!textarea.value.includes(value)) textarea.value += (textarea.value ? '' : '') + value ;
 }
 
@@ -147,7 +147,7 @@ function removeFromSentence(field) {
   if (field === 'title') value = document.getElementById('titleInput').value + '에 대해 아래를 참고해서 블로그를 작성해줘'+ '\n';
   else if (field === 'loca') value = document.getElementById('locaInput').value + '에 있는 ';
   else if (field === 'memo') value = '○ 주문한 메뉴 : ' + document.getElementById('memoInput').value+ '\n'+ '\n';
-  else if (field === 'kword') value = '○ 키워드는 : ' + document.getElementById('kwordInput').value+ '\n';
+  else if (field === 'kword') value = '○ 키워드는 : ' + document.getElementById('kwordInput').value+ ' 으로,\n본문에 자연스럽게 다섯번 이상 넣어서 작성해줘\n';
   const escaped = value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
   textarea.value = textarea.value.replace(new RegExp(escaped, 'g'), '').replace(/\s+/g, '').trim();
 }
