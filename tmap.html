@@ -2,28 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8"/>
-  <title>정성순대 연산동 위치3</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>정성순대 연산동 위치</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- 반드시 한 줄, 파라미터 이름 ncpKeyId, submodules=geocoder -->
+  <!-- ncpKeyId 파라미터, submodules=geocoder 한 줄로만 -->
   <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=3t661n7ihz&submodules=geocoder"></script>
 
   <style>
-    html, body { margin:0; padding:0; height:100% }
-    #map       { width:100%; height:100% }
+    html, body { margin:0; padding:0; height:100%; }
+    #map       { width:100%; height:100%; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
-    // ▶ 1) 지도 초기화
+    // 1) 지도 초기화
     const map = new naver.maps.Map('map', {
       center: new naver.maps.LatLng(35.159667, 129.059384),
       zoom: 15
     });
 
-    // ▶ 2) 정적 geocode 메서드 사용
+    // 2) 주소→좌표 변환 실행
     naver.maps.Service.geocode(
       { query: '정성순대 연산동' },
       (status, response) => {
@@ -31,15 +31,19 @@
         if (status !== naver.maps.Service.Status.OK) {
           return console.error('Geocode 실패:', status);
         }
-        const items = response.result.items;
-        if (!items || items.length === 0) {
+
+        // v3 geocoder 모듈은 response.v2.addresses 에 결과가 담겨 있습니다
+        const addrs = response.v2 && response.v2.addresses;
+        if (!addrs || addrs.length === 0) {
           return console.warn('검색 결과가 없습니다.');
         }
 
-        // ▶ 3) 첫 번째 결과로 마커 생성
-        const { x, y } = items[0].point;
-        const coord = new naver.maps.LatLng(y, x);
+        // 첫 번째 결과 사용
+        const addr = addrs[0];
+        // REST 결과 구조: addr.x(경도), addr.y(위도)
+        const coord = new naver.maps.LatLng(addr.y, addr.x);
 
+        // 3) 지도 센터 이동 & 마커 생성
         map.setCenter(coord);
         new naver.maps.Marker({
           position: coord,
