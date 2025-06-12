@@ -2,50 +2,44 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8"/>
-  <title>정성순대 연산동 위치2</title>
+  <title>정성순대 연산동 위치3</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 
-  <!-- 반드시 한 줄, 공백/줄바꿈 없음 -->
+  <!-- 반드시 한 줄, 파라미터 이름 ncpKeyId, submodules=geocoder -->
   <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=3t661n7ihz&submodules=geocoder"></script>
 
   <style>
-    html, body { margin:0; padding:0; height:100%; }
-    #map { width:100%; height:100%; }
+    html, body { margin:0; padding:0; height:100% }
+    #map       { width:100%; height:100% }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
-    // 1) 지도 초기화
+    // ▶ 1) 지도 초기화
     const map = new naver.maps.Map('map', {
       center: new naver.maps.LatLng(35.159667, 129.059384),
       zoom: 15
     });
 
-    // 2) 지오코더 인스턴스 생성
-    const geocoder = new naver.maps.ServiceGeocoder();
-
-    // 3) 주소 → 좌표 변환 요청
-    geocoder.geocode(
+    // ▶ 2) 정적 geocode 메서드 사용
+    naver.maps.Service.geocode(
       { query: '정성순대 연산동' },
       (status, response) => {
-        console.log('→ geocode status:', status, response);
+        console.log('geocode status:', status, response);
         if (status !== naver.maps.Service.Status.OK) {
-          console.error('Geocode 실패:', status);
-          return;
+          return console.error('Geocode 실패:', status);
         }
         const items = response.result.items;
         if (!items || items.length === 0) {
-          console.warn('검색 결과가 없습니다.');
-          return;
+          return console.warn('검색 결과가 없습니다.');
         }
 
-        // 첫 번째 결과 사용
-        const item = items[0];
-        const coord = new naver.maps.LatLng(item.point.y, item.point.x);
+        // ▶ 3) 첫 번째 결과로 마커 생성
+        const { x, y } = items[0].point;
+        const coord = new naver.maps.LatLng(y, x);
 
-        // 4) 지도 센터 이동 & 마커 생성
         map.setCenter(coord);
         new naver.maps.Marker({
           position: coord,
