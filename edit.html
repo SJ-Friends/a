@@ -266,30 +266,44 @@
       window.open(`https://map.naver.com/v5/search/${query}`, '_blank');
     };
 
-    function openQRModal() {
-      const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
-      if (!tel) return alert('전화번호를 입력해주세요');
-      const title = document.getElementById('title').value;
-      const d = new Date(document.getElementById('res_d').value);
-      const m = d.getMonth() + 1;
-      const day = d.getDate();
-      const weekday = ['일', '월', '화', '수', '목', '금', '토'];
-      const dayName = weekday[d.getDay()];
-      const time = document.getElementById('res_t').value.split(':');
-      const h = parseInt(time[0]);
-      const min = parseInt(time[1]);
-      const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
-      const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
-      const num = document.getElementById('res_p').value || 2;
-      const smsText = `안녕하세요 '${title}'사장님 \n'${office}' 블로그체험단 '일상을여행처럼 남주현'입니다.\n${m}월 ${d}일(${dayName}) ${timeStr} ${res_p || 2}명\n예약가능할까요?`;
-      const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
-      const telURI = `tel:${tel}`;
+function openQRModal() {
+  const tel = document.getElementById('tel').value.trim().replace(/[^0-9]/g, '');
+  if (!tel) return alert('전화번호를 입력해주세요');
 
-      QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 240 });
-      QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 240 });
+  const title = document.getElementById('title').value.trim();
+  const office = document.getElementById('office').value;
+  const resDateStr = document.getElementById('res_d').value;
 
-      document.getElementById('qrModal').classList.add('show');
-    }
+  if (!resDateStr) return alert('예약 날짜를 입력해주세요');
+
+  const d = new Date(resDateStr);
+  if (isNaN(d.getTime())) return alert('유효하지 않은 날짜입니다');
+
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekday = ['일', '월', '화', '수', '목', '금', '토'];
+  const dayName = weekday[d.getDay()];
+
+  const timeParts = document.getElementById('res_t').value.split(':');
+  const h = parseInt(timeParts[0]);
+  const min = parseInt(timeParts[1]);
+  const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
+  const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
+
+  const res_p = document.getElementById('res_p').value || '2';
+
+  // ✅ 텍스트 형식 완전 동일하게
+  const smsText = `안녕하세요 '${title}'사장님 \n'${office}' 블로그체험단 '일상을여행처럼 남주현'입니다.\n${m}월 ${day}일(${dayName}) ${timeStr} ${res_p}명\n예약가능할까요?`;
+
+  const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
+  const telURI = `tel:${tel}`;
+
+  QRCode.toCanvas(document.getElementById('qrSmsCanvas'), smsURI, { width: 240 });
+  QRCode.toCanvas(document.getElementById('qrTelCanvas'), telURI, { width: 240 });
+
+  document.getElementById('qrModal').classList.add('show');
+}
+
 
     function closeQRModal() {
       document.getElementById('qrModal').classList.remove('show');
