@@ -281,8 +281,7 @@
       const hourStr = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
       const timeStr = min === 0 ? `${hourStr}시` : `${hourStr}시 ${min}분`;
       const num = document.getElementById('res_p').value || 2;
-
-      const smsText = `안녕하세요 '${title}'사장님 \n'${office}' 블로그체험단 '일상을여행처럼 남주현'입니다.\n${m}월 ${d}일(${dayName}) ${timeStr} ${res_p || 2}명\n예약가능할까요?`;
+      const smsText = `안녕하세요\\n'${title}' 블로그체험단 일상을여행처럼 남주현입니다\\n${m}월 ${day}일(${dayName}) ${timeStr} ${num}명\\n예약가능할까요?`;
       const smsURI = `sms:${tel}?body=${encodeURIComponent(smsText)}`;
       const telURI = `tel:${tel}`;
 
