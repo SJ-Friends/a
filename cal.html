@@ -15,134 +15,29 @@
       max-width: 1000px;
       margin: auto;
     }
-    .header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .header img {
-      height: 40px;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 1.6em;
-    }
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    #calendar {
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      padding: 10px;
-    }
-    #legend {
-      margin-top: 25px;
-      padding: 10px;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      font-size: 14px;
-    }
-    .legend-item {
-      display: inline-block;
-      margin-right: 15px;
-      margin-bottom: 6px;
-    }
-    .legend-color {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      vertical-align: middle;
-      border-radius: 3px;
-      margin-right: 6px;
-    }
-    button {
-      padding: 8px 14px;
-      background-color: #1d72b8;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background-color: #135a96;
-    }
-    .fc .fc-button {
-      background-color: #1d72b8;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 14px;
-      font-size: 14px;
-    }
-    .fc .fc-button:hover {
-      background-color: #135a96;
-    }
-    .fc .fc-toolbar-title {
-      font-size: 1.4em;
-      font-weight: bold;
-      color: #333;
-    }
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .modal-overlay.show {
-      display: flex;
-      opacity: 1;
-    }
-    .modal {
-      position: relative;
-      background: #fffbe6;
-      border-radius: 8px;
-      padding: 30px;
-      max-width: 700px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .modal .close-btn {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      color: #333;
-      background: none;
-      border: none;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .modal .close-btn:hover { color: #000; }
-    .modal h2 { margin-top: 0; }
-    .modal ul { padding-left: 20px; line-height: 1.6; }
-    .modal .link-button {
-      color: #0077cc;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .modal .small-note {
-      font-size: 0.9em;
-      color: #555;
-    }
+    .header { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .header img { height: 40px; }
+    .header h1 { margin: 0; font-size: 1.6em; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    #calendar { background: white; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 10px; }
+    #legend { margin-top: 25px; padding: 10px; background: #fff; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; }
+    .legend-item { display: inline-block; margin-right: 15px; margin-bottom: 6px; }
+    .legend-color { display: inline-block; width: 14px; height: 14px; vertical-align: middle; border-radius: 3px; margin-right: 6px; }
+    button { padding: 8px 14px; background-color: #1d72b8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    button:hover { background-color: #135a96; }
+    .fc .fc-button { background-color: #1d72b8; border: none; border-radius: 6px; padding: 8px 14px; font-size: 14px; }
+    .fc .fc-button:hover { background-color: #135a96; }
+    .fc .fc-toolbar-title { font-size: 1.4em; font-weight: bold; color: #333; }
+    .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background-color: rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; opacity:0; transition: opacity 0.3s ease; }
+    .modal-overlay.show { display:flex; opacity:1; }
+    .modal { position: relative; background:#fffbe6; border-radius:8px; padding:30px; max-width:700px; width:90%; max-height:90vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.3); animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { transform: translateY(20px); opacity:0;} to { transform: translateY(0); opacity:1;} }
+    .modal .close-btn { position:absolute; top:15px; right:20px; color:#333; background:none; border:none; font-size:24px; font-weight:bold; cursor:pointer; }
+    .modal .close-btn:hover { color:#000; }
+    .modal h2 { margin-top:0; }
+    .modal ul { padding-left:20px; line-height:1.6; }
+    .modal .link-button { color:#0077cc; text-decoration:underline; cursor:pointer; }
+    .modal .small-note { font-size:0.9em; color:#555; }
   </style>
 </head>
 <body>
@@ -153,16 +48,26 @@
 
   <div class="controls">
     <label><input type="checkbox" id="showDone" /> 완료 일정 포함</label>
-    <div style="display: flex; gap: 10px;">
+    <div style="display:flex; gap:10px;">
       <button onclick="location.href='index.html'">➕ 새 일정 등록</button>
       <button onclick="location.href='list.html'">📋 목록 보기</button>
-        <button onclick="location.href='map.html'">🗺️ 지도 보기</button>
+      <button onclick="location.href='map.html'">🗺️ 지도 보기</button>
       <button onclick="location.href='cal_res.html'">📅 예약캘린더</button>
     </div>
   </div>
 
   <div id='calendar'></div>
   <div id="legend"></div>
+
+  <div class="field">
+    <textarea id="finalSentence" rows="5" style="width:30%;"></textarea>
+    <div class="btn-group">
+      
+      <button onclick="copySentence()">복사</button>
+<button onclick="clearSentence()">지우기</button>
+      <button onclick="saveSentence()">저장</button>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="reportModal">
     <div class="modal">
@@ -173,225 +78,32 @@
   </div>
 
 <script>
-  const supabase = window.supabase.createClient(
-    'https://xxmtxuhcdzidhrefrvwf.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
-  );
+  const supabase = window.supabase.createClient('https://xxmtxuhcdzidhrefrvwf.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg');
 
-  function formatCost(value) {
-    const num = parseInt(value, 10);
-    if (isNaN(num)) return '0원';
-    return num.toLocaleString() + '원';
-  }
+  // 로드: 최신 invi
+  async function loadSentence(){const {data}=await supabase.from('invi').select('invi').order('id',{ascending:false}).limit(1);if(data.length)document.getElementById('finalSentence').value=data[0].invi;}
+  // 저장
+  async function saveSentence(){const text=document.getElementById('finalSentence').value;const {error}=await supabase.from('invi').insert({invi:text});if(error)alert('저장 실패:'+error.message);else alert('저장 완료!');}
 
-  function getColorMap(offices) {
-    const palette = ['#e9fdc8', '#c4f2dc', '#fddd85', '#f9cccc', '#bbcbf6'];
-    const colorMap = {};
-    offices.forEach((office, i) => {
-      colorMap[office] = palette[i % palette.length];
-    });
-    return colorMap;
-  }
+  function clearSentence(){document.getElementById('finalSentence').value='';}
+  function copySentence(){const ta=document.getElementById('finalSentence');ta.select();document.execCommand('copy');alert('복사 완료!');}
 
-  async function loadEvents() {
-    const showDone = document.getElementById('showDone').checked;
-    const { data, error } = await supabase.from('sche').select('*');
-    if (error) {
-      alert('일정 불러오기 실패');
-      return [];
-    }
-
-    const filtered = showDone ? data : data.filter(item => !item.done);
-    const uniqueOffices = [...new Set(filtered.map(item => item.office || '기타'))];
-    const colorMap = getColorMap(uniqueOffices);
-
-    const legend = document.getElementById('legend');
-    legend.innerHTML = '<strong>체험단별 색상:</strong><br>' + uniqueOffices.map(office => {
-      const color = colorMap[office];
-      return `
-        <span class="legend-item">
-          <span class="legend-color" style="background:${color}"></span>${office}
-        </span>`;
-    }).join('');
-
-    return filtered.map(item => {
-      const color = item.done ? '#ccc' : colorMap[item.office || '기타'];
-      return {
-        id: item.id,
-        title: `${item.title} (${formatCost(item.cost || '0')})`,
-        start: item.date_s,
-        end: item.date_e ? new Date(new Date(item.date_e).getTime() + 86400000).toISOString().split('T')[0] : item.date_s,
-        extendedProps: { memo: item.memo, loca: item.loca, cost: item.cost, id: item.id },
-        backgroundColor: color,
-        borderColor: color,
-        textColor: '#000'
-      };
-    });
-  }
-
-  function closeModal() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.remove('show');
-    setTimeout(() => { modal.style.display = 'none'; }, 300);
-  }
-
-  async function openModal(dateStr) {
-    const modal = document.getElementById('reportModal');
-    const content = document.getElementById('modalContent');
-    const title = document.getElementById('modalTitle');
-    title.textContent = `일상을 여행처럼 ${dateStr} Report`;
-    content.innerHTML = '불러오는 중...';
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-
-    const today = new Date(dateStr);
-    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
-    const todayName = dayNames[today.getDay()];
-    const { data } = await supabase.from('sche').select('*');
-
-    const available = [], deadline = [], weekend = [];
-
-    const getNextWeekday = (from, day) => {
-      const d = new Date(from); d.setDate(d.getDate() + (day + 7 - d.getDay()) % 7);
-      return d;
-    };
-
-    const thisFri = getNextWeekday(today, 5),
-          thisSat = getNextWeekday(today, 6),
-          thisSun = getNextWeekday(today, 0);
-    const nextFri = new Date(thisFri); nextFri.setDate(thisFri.getDate() + 7);
-    const nextSat = new Date(thisSat); nextSat.setDate(thisSat.getDate() + 7);
-    const nextSun = new Date(thisSun); nextSun.setDate(thisSun.getDate() + 7);
-
-    const isInRange = (d, s, e) => d >= s && d <= e;
-
-    for (const item of data) {
-      if (item.done === true) continue;
-      const start = new Date(item.date_s);
-      const end = new Date(item.date_e);
-
-      if (item[todayName] === 'Y' && start <= today && end >= today)
-        available.push(item);
-
-      const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-      if (diff >= 0 && diff <= 6) deadline.push(item);
-
-      const hasThisWeekend = [thisFri, thisSat, thisSun].some(d => isInRange(d, today, end));
-      const hasNextWeekend = [nextFri, nextSat, nextSun].some(d => isInRange(d, today, end));
-      if (hasThisWeekend && !hasNextWeekend) weekend.push(item);
-    }
-
-    function makeList(list) {
-      return list.map(item => {
-        const mapQuery = encodeURIComponent(`${item.title} ${item.loca}`);
-        const end = new Date(item.date_e);
-        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-        const dDay = diff === 0 ? 'D-DAY' : `D-${diff}`;
-        const costStr = formatCost(item.cost || '0');
-
-        let reserveStr = '';
-        if (item.res_d) {
-          const d = new Date(item.res_d);
-          if (!isNaN(d)) {
-            d.setHours(d.getHours() + 9);
-            const m = d.getMonth() + 1;
-            const day = d.getDate();
-            const h = d.getHours().toString().padStart(2, '0');
-            reserveStr = ` <span style="color: red;">예약일자: ${m}월 ${day}일 ${h}시</span>`;
-          }
-        }
-
-        const titleLine = `
-          <strong><a href="edit.html?id=${item.id}" style="text-decoration: none; color: inherit;">
-            ${item.title}
-          </a></strong> 
-          (<span class="link-button" style="text-decoration: none; color: #0077cc; cursor: pointer;" 
-            onclick="window.open('https://map.naver.com/v5/search/${mapQuery}', '_blank')">
-            ${item.loca} / ${costStr}${reserveStr}
-          </span>)`;
-
-        const dayKor = { sun:'일', mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토' };
-        const unavailableDays = Object.entries(dayKor)
-          .filter(([k]) => item[k] !== 'Y')
-          .map(([_, v]) => v)
-          .join(', ');
-
-        return `
-          <li>
-            ${titleLine}
-            <div class="small-note">불가능요일: ${unavailableDays || '없음'}</div>
-            <div class="small-note">마감일: ${item.date_e || '미정'} (${dDay})</div>
-          </li>`;
-      }).join('');
-    }
-
-    content.innerHTML = `
-      <h3>✅ 체험가능대상 (${available.length}건)</h3>
-      <ul>${makeList(available)}</ul>
-      <h3>⏰ 마감임박 (${deadline.length}건)</h3>
-      <ul>${makeList(deadline)}</ul>
-      <h3>🔥 이번 주말이 마지막! (${weekend.length}건)</h3>
-      <ul>${makeList(weekend)}</ul>
-    `;
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('showDone').checked = false;
-
-    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-      initialView: 'dayGridMonth',
-      locale: 'ko',
-      firstDay: 1, // (2) 월요일부터 시작 추가
-      height: 'auto',
-      headerToolbar: {
-        left: 'prevBtn,nextBtn todayBtn',
-        center: 'title',
-        right: 'doneBtn'
-      },
-      customButtons: {
-        prevBtn: {
-          text: '◁',
-          click() { calendar.prev(); }
-        },
-        nextBtn: {
-          text: '▷',
-          click() { calendar.next(); }
-        },
-        todayBtn: {
-          text: '📍 이번달',
-          click() { calendar.today(); }
-        },
-        doneBtn: {
-          text: '📈 월간실적',
-          click() { location.href = 'done.html'; }
-        }
-      },
-      titleFormat: { year: 'numeric', month: 'long' },
-      dayCellContent: (args) => {
-        return { html: args.date.getDate().toString() }; // (3) 날짜만 숫자로 출력
-      },
-      events: await loadEvents(),
-      eventClick: info => {
-        if (confirm('이 일정을 수정하시겠습니까?')) {
-          window.location.href = `edit.html?id=${info.event.extendedProps.id}`;
-        }
-      },
-      dateClick: info => openModal(info.dateStr)
-    });
-
-    calendar.render();
-
-    document.getElementById('showDone').addEventListener('change', async () => {
-      const events = await loadEvents();
-      calendar.removeAllEvents();
-      calendar.addEventSource(events);
-    });
+  document.addEventListener('DOMContentLoaded',()=>{loadSentence();
+    const calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{
+      initialView:'dayGridMonth', locale:'ko', firstDay:1, height:'auto',
+      headerToolbar:{left:'prevBtn,nextBtn todayBtn',center:'title',right:'doneBtn'},
+      customButtons:{prevBtn:{text:'◁',click:()=>calendar.prev()},nextBtn:{text:'▷',click:()=>calendar.next()},todayBtn:{text:'📍 이번달',click:()=>calendar.today()},doneBtn:{text:'📈 월간실적',click:()=>location.href='done.html'}},
+      titleFormat:{year:'numeric',month:'long'},dayCellContent:args=>({html:args.date.getDate().toString()}),
+      events:async()=>{const chk=document.getElementById('showDone').checked;let {data}=await supabase.from('sche').select('*');if(!chk)data=data.filter(i=>!i.done);const offs=[...new Set(data.map(i=>i.office||'기타'))];const pal=['#e9fdc8','#c4f2dc','#fddd85','#f9cccc','#bbcbf6'];const cmap={};offs.forEach((o,i)=>cmap[o]=pal[i%pal.length]);document.getElementById('legend').innerHTML='<strong>체험단별 색상:</strong><br>'+offs.map(o=>`<span class="legend-item"><span class="legend-color" style="background:${cmap[o]}"></span>${o}</span>`).join('');return data.map(i=>({id:i.id,title:`${i.title} (${parseInt(i.cost)||0}원)`,start:i.date_s,end:i.date_e?new Date(new Date(i.date_e).getTime()+86400000).toISOString().split('T')[0]:i.date_s,backgroundColor:i.done?'#ccc':cmap[i.office||'기타'],borderColor:i.done?'#ccc':cmap[i.office||'기타'],textColor:'#000',extendedProps:{id:i.id}}));},
+      eventClick:info=>{if(confirm('이 일정을 관리하시겠습니까?'))location.href=`edit.html?id=${info.event.extendedProps.id}`;},
+      dateClick:info=>openModal(info.dateStr)
+    });calendar.render();document.getElementById('showDone').addEventListener('change',()=>{calendar.refetchEvents();});
   });
+
+  function closeModal(){const m=document.getElementById('reportModal');m.classList.remove('show');setTimeout(()=>m.style.display='none',300);}
+  async function openModal(dateStr){const modal=document.getElementById('reportModal');document.getElementById('modalTitle').textContent=`일상을 여행처럼 ${dateStr} Report`;document.getElementById('modalContent').innerHTML='불러오는 중...';modal.style.display='flex';setTimeout(()=>modal.classList.add('show'),10);
+    const today=new Date(dateStr),names=['sun','mon','tue','wed','thu','fri','sat'];const now=names[today.getDay()];const {data}=await supabase.from('sche').select('*');const avail=[],dead=[],week=[];const getNext=(f,d)=>{const dd=new Date(f);dd.setDate(dd.getDate()+(d+7-dd.getDay())%7);return dd;};const thisF=getNext(today,5),thisS=getNext(today,6),thisU=getNext(today,0);const nextF=new Date(thisF);nextF.setDate(thisF.getDate()+7);const nextS=new Date(thisS);nextS.setDate(thisS.getDate()+7);const nextU=new Date(thisU);nextU.setDate(thisU.getDate()+7);const inRange=(d,s,e)=>d>=s&&d<=e;data.forEach(i=>{if(i.done)return;const s=new Date(i.date_s),e=new Date(i.date_e);if(i[now]==='Y'&&s<=today&&e>=today)avail.push(i);const diff=Math.ceil((e-today)/(1000*60*60*24));if(diff>=0&&diff<=6)dead.push(i);const hasCur=[thisF,thisS,thisU].some(d=>inRange(d,today,e));const hasNex=[nextF,nextS,nextU].some(d=>inRange(d,today,e));if(hasCur&&!hasNex)week.push(i);});const makeList=list=>list.map(i=>{const mapQ=encodeURIComponent(`${i.title} ${i.loca}`);const d=new Date(i.date_e),diff=Math.ceil((d-today)/(1000*60*60*24));const dDay=diff===0?'D-DAY':`D-${diff}`;let resStr='';if(i.res_d){const rd=new Date(i.res_d);rd.setHours(rd.getHours()+9);resStr=` <span style="color:red;">예약일자: ${rd.getMonth()+1}월 ${rd.getDate()}일 ${rd.getHours()}시</span>`;}const unavailable=Object.entries({sun:'일',mon:'월',tue:'화',wed:'수',thu:'목',fri:'금',sat:'토'}).filter(([k,v])=>i[k]!=='Y').map(([k,v])=>v).join(',')||'없음';return`<li><strong><a href="edit.html?id=${i.id}" style="text-decoration:none;color:inherit;">${i.title}</a></strong> (<span class="link-button" onclick="window.open('https://map.naver.com/v5/search/${mapQ}','_blank')">${i.loca}</span> / ${parseInt(i.cost)||0}원${resStr})<div class="small-note">불가능요일: ${unavailable}</div><div class="small-note">마감일: ${i.date_e} (${dDay})</div></li>`;}).join('');document.getElementById('modalContent').innerHTML=`<h3>✅ 체험가능대상 (${avail.length}건)</h3><ul>${makeList(avail)}</ul><h3>⏰ 마감임박 (${dead.length}건)</h3><ul>${makeList(dead)}</ul><h3>🔥 이번 주말이 마지막! (${week.length}건)</h3><ul>${makeList(week)}</ul>`;}
 </script>
-
-
-
 
 </body>
 </html>
