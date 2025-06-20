@@ -75,7 +75,7 @@
         <th>종료일</th>
         <th>불가능 요일</th>
         <th>체험단</th>
-        <th>AI</th> <!-- ✅ 메모 대신 AI문장 -->
+        <th>AI</th>
         <th>삭제</th>
       </tr>
     </thead>
@@ -83,6 +83,11 @@
   </table>
 
   <script>
+    // 천 단위 쉼표 함수
+    function numberWithCommas(x) {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     const supabase = window.supabase.createClient(
       'https://xxmtxuhcdzidhrefrvwf.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXR4dWhjZHppZGhyZWZydndmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwODAyNTQsImV4cCI6MjA1OTY1NjI1NH0.TaCCDlJvKrif_pZY038Qkglip8h-Qqjp2w2GlKwvoVg'
@@ -126,13 +131,13 @@
           <td><input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleDone(${item.id}, this.checked)"></td>
           <td><input type="checkbox" ${item.res_c ? 'checked' : ''} onchange="toggleRes(${item.id}, this.checked)"></td>
           <td><a href='edit.html?id=${item.id}'>${item.title}</a></td>
-          <td>${item.cost}</td>
+          <td>${numberWithCommas(parseInt(item.cost) || 0)}</td>
           <td><span class="link-button" onclick="window.open('${mapLink}', '_blank')">${item.loca}</span></td>
           <td>${formatShortDate(item.date_s)}</td>
-          <td>${formatShortDate(item.date_e)}</td>
+          <td>${formatShortDate(item.date_ec)}</td>
           <td>${unavailable}</td>
           <td>${item.office || ''}</td>
-          <td><button onclick="location.href='goai.html?id=${item.id}'">AI</button></td> <!-- ✅ 메모 대신 버튼 -->
+          <td><button onclick="location.href='goai.html?id=${item.id}'">AI</button></td>
           <td><button onclick="deleteSchedule(${item.id})">삭제</button></td>
         `;
 
